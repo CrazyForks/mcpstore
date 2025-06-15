@@ -95,80 +95,98 @@ class MCPStoreContext:
            await add_service()  # 注册所有服务
         
         所有新添加的服务都会同步到 mcp.json 配置文件中。
-        """
-        agent_id = self._agent_id or self._store.client_manager.main_client_id
         
-        # 处理不同的输入格式
-        if config is None:
-            # Store模式下的全量注册
-            if self._context_type == ContextType.STORE:
-                print("[INFO][add_service] STORE模式-全量注册所有服务")
-                resp = await self._store.register_json_service()
-                print(f"[INFO][add_service] 注册结果: {resp}")
-                return bool(resp and resp.service_names)
-            else:
-                print("[WARN][add_service] AGENT模式-未指定服务配置")
-                return False
-                
-        # 处理服务名称列表
-        if isinstance(config, list):
-            if not config:
-                print("[WARN][add_service] 服务名称列表为空")
-                return False
-                
-            print(f"[INFO][add_service] 注册指定服务: {config}")
-            resp = await self._store.register_json_service(
-                client_id=agent_id,
-                service_names=config
-            )
-            print(f"[INFO][add_service] 注册结果: {resp}")
-            return bool(resp and resp.service_names)
+        Args:
+            config: 服务配置，支持多种格式
             
-        # 处理字典格式的配置
-        if isinstance(config, dict):
-            # 转换为标准格式
-            if "mcpServers" in config:
-                # 已经是MCPConfig格式
-                mcp_config = config
-            else:
-                # 单个服务配置，需要转换为MCPConfig格式
-                service_name = config.get("name")
-                if not service_name:
-                    print("[ERROR][add_service] 服务配置缺少name字段")
+        Returns:
+            bool: 是否成功添加服务
+        """
+        try:
+            # 获取正确的 client_id
+            client_id = self._agent_id if self._context_type == ContextType.AGENT else self._store.client_manager.main_client_id
+            print(f"[INFO][add_service] 当前模式: {self._context_type.name}, client_id: {client_id}")
+            
+            # 处理不同的输入格式
+            if config is None:
+                # Store模式下的全量注册
+                if self._context_type == ContextType.STORE:
+                    print("[INFO][add_service] STORE模式-全量注册所有服务")
+                    resp = await self._store.register_json_service()
+                    print(f"[INFO][add_service] 注册结果: {resp}")
+                    return bool(resp and resp.service_names)
+                else:
+                    print("[WARN][add_service] AGENT模式-未指定服务配置")
                     return False
                     
-                mcp_config = {
-                    "mcpServers": {
-                        service_name: {k: v for k, v in config.items() if k != "name"}
-                    }
-                }
-            
-            # 更新配置文件
-            try:
-                # 1. 加载现有配置
-                current_config = self._store.config.load_config()
-                
-                # 2. 合并新配置
-                for name, service_config in mcp_config["mcpServers"].items():
-                    current_config["mcpServers"][name] = service_config
-                
-                # 3. 保存更新后的配置
-                self._store.config.save_config(current_config)
-                
-                # 4. 注册服务
+            # 处理服务名称列表
+            if isinstance(config, list):
+                if not config:
+                    print("[WARN][add_service] 服务名称列表为空")
+                    return False
+                    
+                print(f"[INFO][add_service] 注册指定服务: {config}")
                 resp = await self._store.register_json_service(
-                    client_id=agent_id,
-                    service_names=list(mcp_config["mcpServers"].keys())
+                    client_id=client_id,
+                    service_names=config
                 )
                 print(f"[INFO][add_service] 注册结果: {resp}")
                 return bool(resp and resp.service_names)
                 
-            except Exception as e:
-                print(f"[ERROR][add_service] 更新配置文件失败: {e}")
-                return False
-        
-        print(f"[ERROR][add_service] 不支持的配置格式: {type(config)}")
-        return False
+            # 处理字典格式的配置
+            if isinstance(config, dict):
+                # 转换为标准格式
+                if "mcpServers" in config:
+                    # 已经是MCPConfig格式
+                    mcp_config = config
+                else:
+                    # 单个服务配置，需要转换为MCPConfig格式
+                    service_name = config.get("name")
+                    if not service_name:
+                        print("[ERROR][add_service] 服务配置缺少name字段")
+                        return False
+                        
+                    mcp_config = {
+                        "mcpServers": {
+                            service_name: {k: v for k, v in config.items() if k != "name"}
+                        }
+                    }
+                
+                # 更新配置文件
+                try:
+                    # 1. 加载现有配置
+                    current_config = self._store.config.load_config()
+                    
+                    # 2. 合并新配置
+                    for name, service_config in mcp_config["mcpServers"].items():
+                        current_config["mcpServers"][name] = service_config
+                    
+                    # 3. 保存更新后的配置
+                    self._store.config.save_config(current_config)
+                    
+                    # 4. 重新加载配置以确保同步
+                    self._store.config.load_config()
+                    
+                    # 5. 注册服务
+                    service_names = list(mcp_config["mcpServers"].keys())
+                    print(f"[INFO][add_service] 注册服务: {service_names}")
+                    resp = await self._store.register_json_service(
+                        client_id=client_id,
+                        service_names=service_names
+                    )
+                    print(f"[INFO][add_service] 注册结果: {resp}")
+                    return bool(resp and resp.service_names)
+                    
+                except Exception as e:
+                    print(f"[ERROR][add_service] 更新配置文件失败: {e}")
+                    return False
+            
+            print(f"[ERROR][add_service] 不支持的配置格式: {type(config)}")
+            return False
+            
+        except Exception as e:
+            print(f"[ERROR][add_service] 服务添加失败: {e}")
+            return False
 
     async def list_tools(self) -> List[ToolInfo]:
         """

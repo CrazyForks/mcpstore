@@ -63,21 +63,73 @@ async def store_add_service(
     """Store 级别注册服务
     支持三种模式：
     1. 空参数注册：注册所有 mcp.json 中的服务
-    2. URL方式添加服务：通过 url、transport 等配置添加
-    3. 命令方式添加服务：通过 command、args 等配置添加
+       POST /for_store/add_service
+    
+    2. URL方式添加服务：
+       POST /for_store/add_service
+       {
+           "name": "weather",
+           "url": "https://weather-api.example.com/mcp",
+           "transport": "streamable-http"
+       }
+    
+    3. 命令方式添加服务：
+       POST /for_store/add_service
+       {
+           "name": "assistant",
+           "command": "python",
+           "args": ["./assistant_server.py"],
+           "env": {"DEBUG": "true"}
+       }
+    
+    Returns:
+        APIResponse: {
+            "success": true/false,
+            "data": true/false,  # 是否成功添加服务
+            "message": "错误信息（如果有）"
+        }
     """
-    context = store.for_store()
-    
-    # 1. 空参数注册
-    if not payload:
-        return await context.add_service()
-    
-    # 2/3. 配置方式添加服务
-    if "name" in payload:
-        # URL方式或命令方式
-        return await context.add_service(payload)
-    
-    raise HTTPException(status_code=400, detail="Invalid payload format")
+    try:
+        context = store.for_store()
+        
+        # 1. 空参数注册
+        if not payload:
+            result = await context.add_service()
+            return APIResponse(
+                success=True,
+                data=result,
+                message="Successfully registered all services" if result else "Failed to register services"
+            )
+        
+        # 2/3. 配置方式添加服务
+        if isinstance(payload, dict):
+            if "name" not in payload:
+                raise HTTPException(status_code=400, detail="Service name is required")
+                
+            if "url" in payload and "command" in payload:
+                raise HTTPException(status_code=400, detail="Cannot specify both url and command")
+                
+            if "url" in payload and "transport" not in payload:
+                raise HTTPException(status_code=400, detail="Transport type is required for URL-based service")
+                
+            if "command" in payload and not isinstance(payload.get("args", []), list):
+                raise HTTPException(status_code=400, detail="Args must be a list")
+                
+            result = await context.add_service(payload)
+            return APIResponse(
+                success=True,
+                data=result,
+                message="Successfully added service" if result else "Failed to add service"
+            )
+        
+        raise HTTPException(status_code=400, detail="Invalid payload format")
+        
+    except Exception as e:
+        return APIResponse(
+            success=False,
+            data=False,
+            message=str(e)
+        )
 
 @router.get("/for_store/list_services", response_model=APIResponse)
 @handle_exceptions
@@ -116,22 +168,73 @@ async def agent_add_service(
 ):
     """Agent 级别注册服务
     支持两种模式：
-    1. 通过服务名列表注册：["服务名1", "服务名2"]
-    2. 通过配置添加：{"name": "服务名", ...}
+    1. 通过服务名列表注册：
+       POST /for_agent/{agent_id}/add_service
+       ["服务名1", "服务名2"]
+    
+    2. 通过配置添加：
+       POST /for_agent/{agent_id}/add_service
+       {
+           "name": "新服务",
+           "command": "python",
+           "args": ["service.py"],
+           "env": {"DEBUG": "true"}
+       }
+    
+    Args:
+        agent_id: Agent ID
+        payload: 服务配置或服务名列表
+    
+    Returns:
+        APIResponse: {
+            "success": true/false,
+            "data": true/false,  # 是否成功添加服务
+            "message": "错误信息（如果有）"
+        }
     """
-    validate_agent_id(agent_id)
-    context = store.for_agent(agent_id)
-    
-    # 1. 服务名列表方式
-    if isinstance(payload, list):
-        validate_service_names(payload)
-        return await context.add_service(payload)
-    
-    # 2. 配置方式
-    if isinstance(payload, dict) and "name" in payload:
-        return await context.add_service(payload)
-    
-    raise HTTPException(status_code=400, detail="Invalid payload format")
+    try:
+        validate_agent_id(agent_id)
+        context = store.for_agent(agent_id)
+        
+        # 1. 服务名列表方式
+        if isinstance(payload, list):
+            validate_service_names(payload)
+            result = await context.add_service(payload)
+            return APIResponse(
+                success=True,
+                data=result,
+                message="Successfully registered services" if result else "Failed to register services"
+            )
+        
+        # 2. 配置方式
+        if isinstance(payload, dict):
+            if "name" not in payload:
+                raise HTTPException(status_code=400, detail="Service name is required")
+                
+            if "url" in payload and "command" in payload:
+                raise HTTPException(status_code=400, detail="Cannot specify both url and command")
+                
+            if "url" in payload and "transport" not in payload:
+                raise HTTPException(status_code=400, detail="Transport type is required for URL-based service")
+                
+            if "command" in payload and not isinstance(payload.get("args", []), list):
+                raise HTTPException(status_code=400, detail="Args must be a list")
+                
+            result = await context.add_service(payload)
+            return APIResponse(
+                success=True,
+                data=result,
+                message="Successfully added service" if result else "Failed to add service"
+            )
+        
+        raise HTTPException(status_code=400, detail="Invalid payload format")
+        
+    except Exception as e:
+        return APIResponse(
+            success=False,
+            data=False,
+            message=str(e)
+        )
 
 @router.get("/for_agent/{agent_id}/list_services", response_model=APIResponse)
 @handle_exceptions

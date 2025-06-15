@@ -86,61 +86,105 @@ class MCPStore:
         return results
 
     async def register_json_service(self, client_id: Optional[str] = None, service_names: Optional[List[str]] = None) -> JsonRegistrationResponse:
-        """批量注册服务，等价于 /register/json"""
-        # 情况1: main_client 视为特殊 agent，注册所有 mcp.json 服务
-        if client_id and client_id == self.client_manager.main_client_id and not service_names:
+        """
+        批量注册服务，支持多种场景：
+        1. Store 全量注册：client_id == main_client_id，不指定 service_names
+        2. Agent 指定服务注册：提供 client_id 和 service_names
+        3. 临时注册：不提供 client_id，但提供 service_names
+        4. 默认全量注册：既不提供 client_id 也不提供 service_names
+        
+        Args:
+            client_id: 客户端ID，可选
+            service_names: 服务名称列表，可选
+            
+        Returns:
+            JsonRegistrationResponse: 注册结果
+        """
+        try:
+            # 重新加载配置以确保使用最新配置
             all_services = self.config.load_config().get("mcpServers", {})
-            agent_id = self.client_manager.main_client_id
-            registered_client_ids = []
-            registered_services = []
-            for name in all_services.keys():
-                new_client_id = self.client_manager.generate_client_id()
-                client_config = {"mcpServers": {name: all_services[name]}}
-                self.client_manager.save_client_config(new_client_id, client_config)
-                self.client_manager.add_agent_client_mapping(agent_id, new_client_id)
-                await self.orchestrator.register_json_services(client_config, client_id=new_client_id)
-                registered_client_ids.append(new_client_id)
-                registered_services.append(name)
+            
+            # 情况1: Store 全量注册
+            if client_id and client_id == self.client_manager.main_client_id and not service_names:
+                print(f"[INFO][register_json_service] STORE模式-全量注册，client_id: {client_id}")
+                agent_id = self.client_manager.main_client_id
+                registered_client_ids = []
+                registered_services = []
+                
+                for name in all_services.keys():
+                    try:
+                        new_client_id = self.client_manager.generate_client_id()
+                        client_config = {"mcpServers": {name: all_services[name]}}
+                        self.client_manager.save_client_config(new_client_id, client_config)
+                        self.client_manager.add_agent_client_mapping(agent_id, new_client_id)
+                        await self.orchestrator.register_json_services(client_config, client_id=new_client_id)
+                        registered_client_ids.append(new_client_id)
+                        registered_services.append(name)
+                        print(f"[INFO][register_json_service] 成功注册服务: {name}")
+                    except Exception as e:
+                        print(f"[ERROR][register_json_service] 注册服务 {name} 失败: {e}")
+                        continue
+                        
+                return JsonRegistrationResponse(
+                    client_id=agent_id,
+                    service_names=registered_services,
+                    config={"client_ids": registered_client_ids, "services": registered_services}
+                )
+                
+            # 情况2: 临时注册（不提供client_id但提供service_names）
+            elif not client_id and service_names:
+                print(f"[INFO][register_json_service] 临时注册模式，services: {service_names}")
+                config = self.orchestrator.create_client_config_from_names(service_names)
+                import time; agent_id = f"agent_{int(time.time() * 1000)}"
+                results = await self.orchestrator.register_json_services(config)
+                return JsonRegistrationResponse(
+                    client_id=agent_id,
+                    service_names=list(results.get("services", {}).keys()),
+                    config=config
+                )
+                
+            # 情况3: 默认全量注册
+            elif not client_id and not service_names:
+                print("[INFO][register_json_service] 默认全量注册")
+                return await self.register_json_service(client_id=self.client_manager.main_client_id)
+                
+            # 情况4: Agent 指定服务注册
+            else:
+                print(f"[INFO][register_json_service] AGENT模式-指定服务注册，client_id: {client_id}, services: {service_names}")
+                agent_id = client_id
+                registered_client_ids = []
+                registered_services = []
+                
+                for name in service_names or []:
+                    try:
+                        if name not in all_services:
+                            print(f"[WARN][register_json_service] 服务 {name} 未在全局配置中找到，跳过")
+                            continue
+                            
+                        new_client_id = self.client_manager.generate_client_id()
+                        client_config = {"mcpServers": {name: all_services[name]}}
+                        self.client_manager.save_client_config(new_client_id, client_config)
+                        self.client_manager.add_agent_client_mapping(agent_id, new_client_id)
+                        await self.orchestrator.register_json_services(client_config, client_id=new_client_id)
+                        registered_client_ids.append(new_client_id)
+                        registered_services.append(name)
+                        print(f"[INFO][register_json_service] 成功注册服务: {name}")
+                    except Exception as e:
+                        print(f"[ERROR][register_json_service] 注册服务 {name} 失败: {e}")
+                        continue
+                        
+                return JsonRegistrationResponse(
+                    client_id=agent_id,
+                    service_names=registered_services,
+                    config={"client_ids": registered_client_ids, "services": registered_services}
+                )
+                
+        except Exception as e:
+            print(f"[ERROR][register_json_service] 服务注册失败: {e}")
             return JsonRegistrationResponse(
-                client_id=agent_id,
-                service_names=registered_services,
-                config={"client_ids": registered_client_ids, "services": registered_services}
-            )
-        # 情况2: 没有传入client_id但传入了service_names
-        elif not client_id and service_names:
-            config = self.orchestrator.create_client_config_from_names(service_names)
-            import time; agent_id = f"agent_{int(time.time() * 1000)}"
-            results = await self.orchestrator.register_json_services(config)
-            return JsonRegistrationResponse(
-                client_id=agent_id,
-                service_names=list(results.get("services", {}).keys()),
-                config=config
-            )
-        # 情况3: 既没有传入client_id也没有传入service_names
-        elif not client_id and not service_names:
-            # 默认等价于 main_client 全量注册
-            return await self.register_json_service(client_id=self.client_manager.main_client_id)
-        # 情况4: agent级别多服务注册，强隔离
-        else:
-            all_services = self.config.load_config().get("mcpServers", {})
-            agent_id = client_id
-            registered_client_ids = []
-            registered_services = []
-            for name in service_names or []:
-                if name not in all_services:
-                    print(f"[WARN][register_json_service] 服务 {name} 未在全局配置中找到，跳过")
-                    continue
-                new_client_id = self.client_manager.generate_client_id()
-                client_config = {"mcpServers": {name: all_services[name]}}
-                self.client_manager.save_client_config(new_client_id, client_config)
-                self.client_manager.add_agent_client_mapping(agent_id, new_client_id)
-                await self.orchestrator.register_json_services(client_config, client_id=new_client_id)
-                registered_client_ids.append(new_client_id)
-                registered_services.append(name)
-            return JsonRegistrationResponse(
-                client_id=agent_id,
-                service_names=registered_services,
-                config={"client_ids": registered_client_ids, "services": registered_services}
+                client_id=client_id or self.client_manager.main_client_id,
+                service_names=[],
+                config={}
             )
 
     async def update_json_service(self, payload: JsonUpdateRequest) -> JsonRegistrationResponse:
