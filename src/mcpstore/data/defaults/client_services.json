@@ -1,0 +1,200 @@
+{
+  "client_20250616012056_wr5n5r": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c2",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616012057_p09rb0": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@upstash/context7-mcp"
+        ]
+      }
+    }
+  },
+  "client_20250616012101_r17rtm": {
+    "mcpServers": {
+      "新服务": {
+        "command": "python",
+        "args": [
+          "service.py"
+        ],
+        "env": {
+          "DEBUG": "true"
+        }
+      }
+    }
+  },
+  "client_20250616012101_tn2g6h": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616012102_3gyizm": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@upstash/context7-mcp"
+        ]
+      }
+    }
+  },
+  "client_20250616012106_c5er9r": {
+    "mcpServers": {
+      "新服务": {
+        "command": "python",
+        "args": [
+          "service.py"
+        ],
+        "env": {
+          "DEBUG": "true"
+        }
+      }
+    }
+  },
+  "client_20250616012106_xqb64m": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616012107_6egon2": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@upstash/context7-mcp"
+        ]
+      }
+    }
+  },
+  "client_20250616012110_ihszf2": {
+    "mcpServers": {
+      "新服务": {
+        "command": "python",
+        "args": [
+          "service.py"
+        ],
+        "env": {
+          "DEBUG": "true"
+        }
+      }
+    }
+  },
+  "client_20250616012125_frjzcx": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616012127_9gvt1k": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616012127_ce5tsm": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@upstash/context7-mcp"
+        ]
+      }
+    }
+  },
+  "client_20250616012131_lp0s4b": {
+    "mcpServers": {
+      "新服务": {
+        "command": "python",
+        "args": [
+          "service.py"
+        ],
+        "env": {
+          "DEBUG": "true"
+        }
+      }
+    }
+  },
+  "client_20250616012152_uhkiaj": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616013403_kihzgj": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616013404_pq7nz9": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@upstash/context7-mcp"
+        ]
+      }
+    }
+  },
+  "client_20250616013919_58i312": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616013920_h60fay": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@upstash/context7-mcp"
+        ]
+      }
+    }
+  },
+  "client_20250616014042_yd9c7v": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  },
+  "client_20250616014437_ppsdre": {
+    "mcpServers": {
+      "高德": {
+        "url": "https://mcp.amap.com/sse?key=da2c9c39f9edad643b9c53f506fb381c",
+        "transport": "sse"
+      }
+    }
+  }
+}
