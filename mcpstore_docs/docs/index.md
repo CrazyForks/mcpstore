@@ -33,10 +33,10 @@ print(result)
 
 ## 下一步
 
-- [快速入门](getting-started/installation.md) - 开始使用 MCPStore
+- [快速上手](getting-started/quickstart.md) - 30秒快速上手 MCPStore
 - [服务管理](services/overview.md) - 了解如何管理 MCP 服务
-- [工具使用](tools/overview.md) - 学习如何调用工具
+- [工具管理](tools/overview.md) - 学习如何使用工具
 
 ---
 
-**准备好开始了吗？** 让我们从 [安装指南](getting-started/installation.md) 开始吧！
+**准备好开始了吗？** 让我们从 [快速上手指南](getting-started/quickstart.md) 开始吧！ 🚀
