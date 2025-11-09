@@ -28,7 +28,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-/src/vue/node_modules/*
+*/node_modules/*
 # PyInstaller
 *.manifest
 *.spec
@@ -67,8 +67,7 @@ venv.bak/
 # OS-generated files
 .DS_Store
 Thumbs.db
-/test*.py
-/src/test*.py
+
 # Other
 *.log
 *.bak
@@ -103,15 +102,13 @@ TODO
 /预计重构后的使用chain.txt
 /古老的测试文件/修正后的代码测试.py
 /古老的测试文件/测试工具命名管理器.py
-测试*.py
-简单状态测试.py
+
+
 /src/mcpstore/data
-test_*.py
-*测试.py
-*测试plus.py
+
 *测试*.py
 调试*.py
 检查同步异步方法.py
 /古老的测试文件/*
-
-
+/node_modules/*
+/mcpstore_docs/site/*
