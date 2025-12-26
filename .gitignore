@@ -1,114 +1,136 @@
-/doc/
-/.specstory/
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# ============================================
+# 白名单模式 .gitignore 配置
+# 策略：先忽略所有，再逐个放行需要的文件
+# ============================================
 
-# C extensions
-*.so
+# 第一步：忽略所有文件和目录
+*
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-*/node_modules/*
-# PyInstaller
-*.manifest
-*.spec
+# ============================================
+# 第二步：放行根目录的重要文件
+# ============================================
+# README 文档
+!README.md
+!README_zh.md
+!README_en.md
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# 许可和发布文件
+!LICENSE
+!PUBLISH.md
+!MANIFEST.in
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+# Python 项目配置文件
+!pyproject.toml
+!pytest.ini
 
-# Environments
-.env
-.venv
-env/
+# Docker 配置
+!docker-compose.yml
+!.dockerignore
+
+# 环境配置示例
+!.env.example
+
+# 包管理器锁文件
+!uv.lock
+
+# ============================================
+# 第三步：放行重要目录及其内容
+# ============================================
+
+# --- src/ 目录（核心代码） ---
+!src/
+!src/**
+
+# --- wiki/ 目录（文档） ---
+!wiki/
+!wiki/**
+
+# --- vue/ 目录（前端项目） ---
+!vue/
+!vue/**
+# Vue 项目需要忽略的内容
+vue/node_modules/
+vue/dist/
+vue/.nuxt/
+vue/.output/
+vue/.venv/
+
+# --- docs/ 目录（文档） ---
+!docs/
+!docs/**
+
+# --- docker/ 目录（Docker 配置） ---
+!docker/
+!docker/**
+
+# --- example/ 目录（示例代码） ---
+!example/
+!example/**
+
+# --- tests/ 目录（测试文件） ---
+!tests/
+!tests/**
+
+# ============================================
+# 第四步：忽略不需要的内容
+# ============================================
+
+# Python 相关
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/pip-log.txt
+**/pip-delete-this-directory.txt
+
+# 虚拟环境
+.venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
 
-# IDE settings
+# 测试覆盖率
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.pytest_cache/
+.hypothesis/
+
+# 构建产物
+dist/
+build/
+*.egg-info/
+*.egg
+
+# IDE 配置文件
 .idea/
 .vscode/
-*.iml
+.cursor/
+.codex/
+*.swp
+*.swo
+*~
 
-# OS-generated files
-.DS_Store
-Thumbs.db
-
-# Other
+# 日志和临时文件
 *.log
+logs/
+temp/
+uploads/
+**/.DS_Store
+
+# MCP 和其他工具配置
+.mcpstore/
+.serena/
+.specstory/
+.spec-workflow/
+.claude/
+.kiro/
+.home/
+
+# 其他
+.git/
 *.bak
-*.rar
-*.txt
-*.json
-*.md
-TODO
-/古老的测试文件/简单langchian测试.py
-/古老的测试文件/简单langchian测试2.py
-/古老的测试文件/简单langchian测试3极简演示.py
-/古老的测试文件/简单测试.py
-/古老的测试文件/简单测试api.py
-/古老的测试文件/API接口完整测试.py
-/src/fastmcp-llms-full.txt
-/古老的测试文件/langchain集成版本1.py
-/古老的测试文件/linshi.py
-/src/mcp_service.log
-/古老的测试文件/mcpstore_package_usage.py
-/.cursorindexingignore
-/古老的测试文件/bak/*
-/古老的测试文件/MCPStore_LangChain_完整演示.py
-/### 全流程启动过程梳理 (`python -m mcpstore.cli.main api --reload`)
-/古老的测试文件/最终链式调用验证.py
-/测试重构完成报告.md
-/简单测试日志.txt
-/简单测试的一次日志.txt
-/重构后心跳和重连机制测试报告.md
-/重构计划1.md
-/古老的测试文件/链式调用可行性测试.py
-/古老的测试文件/链式调用测试.py
-/预计重构后的使用chain.txt
-/古老的测试文件/修正后的代码测试.py
-/古老的测试文件/测试工具命名管理器.py
-
-
-/src/mcpstore/data
-
-*测试*.py
-调试*.py
-检查同步异步方法.py
-/古老的测试文件/*
-/node_modules/*
-/mcpstore_docs/site/*
+vulture_report.json
+.workflow-confirmations.json
