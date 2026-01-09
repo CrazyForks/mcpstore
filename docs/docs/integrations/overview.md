@@ -6,14 +6,14 @@ MCPStore 提供了与主流 AI 框架的无缝集成，让你可以轻松地在�
 
 MCPStore 目前支持以下主流 AI 框架：
 
-| 框架 | 状态 | 集成方式 | 文档 |
-|------|------|----------|------|
-| **LangChain** | 完全支持 | `for_langchain()` | [查看文档](../tools/langchain/langchain-list-tools.md) |
-| **LlamaIndex** | 完全支持 | `for_llamaindex()` | [查看文档](../tools/llamaindex/llamaindex-list-tools.md) |
-| **CrewAI** | 完全支持 | `for_crewai()` | [查看文档](../tools/crewai/crewai-list-tools.md) |
-| **LangGraph** | 完全支持 | `for_langgraph()` | [查看文档](../tools/langgraph/langgraph-list-tools.md) |
-| **AutoGen** | 完全支持 | `for_autogen()` | [查看文档](../tools/autogen/autogen-list-tools.md) |
-| **Semantic Kernel** | 完全支持 | `for_semantic_kernel()` | [查看文档](../tools/semantic-kernel/semantic-kernel-list-tools.md) |
+| 框架 | 状态 | 集成方式 |
+|------|------|----------|
+| **LangChain** | 完全支持 | `for_langchain()` |
+| **LlamaIndex** | 完全支持 | `for_llamaindex()` |
+| **CrewAI** | 完全支持 | `for_crewai()` |
+| **LangGraph** | 完全支持 | `for_langgraph()` |
+| **AutoGen** | 完全支持 | `for_autogen()` |
+| **Semantic Kernel** | 完全支持 | `for_semantic_kernel()` |
 
 ---
 
@@ -116,8 +116,7 @@ for tool in lc_tools:
         print(f"return_direct: {tool.return_direct}")  # True
 ```
 
-详细文档：[LangChain 集成完整指南](../tools/langchain/langchain-list-tools.md)  
-使用示例：[LangChain 示例代码](../tools/langchain/examples.md)
+更多使用示例可参考本页的代码片段和 [工具概览](../tools/overview.md) 中的指南。
 
 ---
 
@@ -172,49 +171,6 @@ agent2_tools = store.for_agent("agent2").for_langchain().list_tools()
 | 工具配置 | 支持 | 部分 | 部分 | 支持 | 部分 | 部分 |
 
 
-
----
-
-## 各框架文档
-
-### LangChain
-最流行的 AI 应用开发框架。
-
-- [集成文档](../tools/langchain/langchain-list-tools.md)
-- [使用示例](../tools/langchain/examples.md)
-- 适用场景: Agent、Chain、RAG 应用
-
-### LlamaIndex
-专注于数据检索和 RAG 的框架。
-
-- [集成文档](../tools/llamaindex/llamaindex-list-tools.md)
-- 适用场景: 数据检索、知识库问答
-
-### CrewAI
-多 Agent 协作框架。
-
-- [集成文档](../tools/crewai/crewai-list-tools.md)
-- 适用场景: 多 Agent 系统、任务协作
-
-### LangGraph
-基于图的 AI 工作流框架。
-
-- [集成文档](../tools/langgraph/langgraph-list-tools.md)
-- 适用场景: 复杂工作流、状态管理
-
-### AutoGen
-微软的多 Agent 对话框架。
-
-- [集成文档](../tools/autogen/autogen-list-tools.md)
-- 适用场景: Agent 对话、代码生成
-
-### Semantic Kernel
-微软的 AI 编排框架。
-
-- [集成文档](../tools/semantic-kernel/semantic-kernel-list-tools.md)
-- 适用场景: 企业应用、.NET 集成
-
----
 
 ## 最佳实践
 
@@ -295,4 +251,3 @@ store = MCPStore.setup_store(debug=True)
 ---
 
 选择你使用的框架，查看详细的集成文档。
-

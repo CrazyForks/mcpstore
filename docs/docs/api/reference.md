@@ -610,10 +610,10 @@ except Exception as e:
 
 ## 🔗 相关文档
 
-- [快速开始](../getting-started/quick-demo.md)
-- [配置指南](../configuration.md)
-- [服务管理](../services/management/service-management.md)
-- [工具使用](../tools/usage/tool-usage-overview.md)
+- [快速开始](../quickstart.md)
+- [配置项说明](../api/cache-config.md)
+- [服务管理指南](../services/overview.md)
+- [工具使用指南](../tools/overview.md)
 
 ---
 
