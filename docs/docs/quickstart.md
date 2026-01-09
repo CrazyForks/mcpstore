@@ -69,10 +69,10 @@ print(events)
 
 ## 下一步
 
-- [快速上手](getting-started/quickstart.md) - 30秒快速上手 MCPStore
+- [快速上手](quickstart.md) - 30秒快速上手 MCPStore
 - [服务管理](services/overview.md) - 了解如何管理 MCP 服务
 - [工具管理](tools/overview.md) - 学习如何使用工具
 
 ---
 
-**准备好开始了吗？** 让我们从 [快速上手指南](getting-started/quickstart.md) 开始吧！ 
+**准备好开始了吗？** 让我们从 [快速上手指南](quickstart.md) 开始吧！
