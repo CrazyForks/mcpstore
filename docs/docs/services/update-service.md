@@ -1,234 +1,102 @@
-## update_service - 服务更新
+# 更新服务（update_service）
 
+全量替换指定服务的配置，适用于需要重写服务端点、启动命令或认证信息的场景。
 
-完全替换服务配置。
+## 概念与前置
+- Store：全局服务仓库，`for_store()` 操作全局可见的服务（参见 [服务管理概览](overview.md)）。
+- Agent：逻辑分组，`for_agent(agent_id)` 仅在该分组内可见，适合隔离上下文。
+- 全量更新：`update_service` 会覆盖原有配置，未提供的字段会被清空；若仅需增量修改，请改用 `patch-service.md`。
+- 必须前置：已通过 `MCPStore.setup_store()` 初始化 Store（参见 [快速上手](../quickstart.md)），目标服务已存在。
 
-### SDK
+## 主要方法
+| 场景 | 标准用法 | 返回值 | 说明 |
+| ---- | -------- | ------ | ---- |
+| 全局更新 | `store.for_store().update_service(name, config)` | `bool` | 同步全量替换指定服务配置 |
+| Agent 更新 | `store.for_agent("agentA").update_service(name, config)` | `bool` | 仅更新该 Agent 分组下的服务 |
+| 异步形式 | `await store.for_store().update_service_async(name, config)` | `bool` | 异步全量替换 |
 
-同步：
-  - `store.for_store().update_service(name, config) -> bool`
-  - `store.for_agent(id).update_service(name, config) -> bool`
+## 参数说明
+| 参数 | 类型 | 必填 | 说明 | 示例 |
+| ---- | ---- | ---- | ---- | ---- |
+| `name` | str | 是 | 服务名称 | `"weather"` |
+| `config` | dict / str | 是 | 新配置，完全替换旧配置；字符串时需为 JSON | 见下方示例 |
 
-异步：
-  - `await store.for_store().update_service_async(name, config) -> bool`
-  - `await store.for_agent(id).update_service_async(name, config) -> bool`
+## config 参数说明
+- 类型：dict / JSON 字符串。
+- 要求：必须至少包含 `url` 或 `command` 字段。
+- 作用：定义服务端点（HTTP/SSE）或本地启动方式，以及认证、超时等配置信息。
+- 认证：`headers` 中可放置 `Authorization`/`X-API-Key` 等；`token/api_key/auth` 会被标准化为 headers。
 
-### 参数
+| 场景 | 最小配置示例 |
+| ---- | ------------ |
+| 远程服务 | `{"url": "https://api.newweather.com/mcp", "headers": {"Authorization": "Bearer new-token"}}` |
+| 本地命令服务 | `{"command": "python", "args": ["./weather_server.py"], "env": {"API_KEY": "xxx"}}` |
+| 显式 transport | `{"url": "https://api.example.com/sse", "transport": "sse"}` |
 
-| 参数名 | 类型 | 说明 |
-|--------|------|------|
-| `name` | str  | 服务名称 |
-| `config` | dict | 新的服务配置（完全替换） |
+传输类型：未声明时默认 `streamable-http`，URL 含 `/sse` 时推断为 `sse`。可在 config 中显式指定 `transport` 固定类型。
 
-### 返回值
-
-- `True`：更新成功
-- `False`：更新失败
-
-### 视角
-通过 `for_store()` 或 `for_agent(id)` 在对应命名空间内更新指定服务。
-
-### 使用示例
-
-### Store级别更新服务
-
+## 标准使用
+1) 初始化 Store
 ```python
 from mcpstore import MCPStore
-
-# 初始化
 store = MCPStore.setup_store()
+```
 
-# 完全替换服务配置
+2) 全量更新服务配置
+```python
 new_config = {
     "url": "https://api.newweather.com/mcp",
     "transport": "http",
     "timeout": 30,
-    "headers": {
-        "Authorization": "Bearer new-token"
-    }
+    "headers": {"Authorization": "Bearer new-token"}
 }
-
-success = store.for_store().update_service("weather", new_config)
-if success:
-    print("Weather服务配置已更新")
-else:
-    print("Weather服务配置更新失败")
+ok = store.for_store().update_service("weather", new_config)
+print("更新结果:", ok)
 ```
 
-### Agent级别更新服务
+3) 如需等待新配置生效（重启/重连），单独等待
+```python
+store.for_store().wait_service("weather", status="healthy", timeout=60)
+```
 
+4) 验证配置
+```python
+info = store.for_store().get_service_info("weather")
+print(info)
+```
+
+### for_agent 模式使用
 ```python
 from mcpstore import MCPStore
 
-# 初始化
 store = MCPStore.setup_store()
+agent_id = "agentA"
 
-# Agent模式更新服务
-new_config = {
+cfg = {
     "command": "python",
-    "args": ["weather_server.py", "--port", "8080"],
-    "env": {
-        "API_KEY": "new-api-key"
-    }
+    "args": ["./calc.py"],
+    "env": {"MODE": "prod"}
 }
 
-success = store.for_agent("agent1").update_service("weather-local", new_config)
-if success:
-    print("Agent Weather服务配置已更新")
+# 仅更新 agentA 分组下的 local_calc 服务
+store.for_agent(agent_id).update_service("local_calc", cfg)
+
+# 等待就绪（可选）
+store.for_agent(agent_id).wait_service("local_calc", status="healthy", timeout=60)
+
+# 查看该分组的服务
+services = store.for_agent(agent_id).list_services()
+print([s.name for s in services])
 ```
 
-### 更新URL服务
+## 返回值
+- `True`：更新请求已执行（全量替换），不代表已就绪。
+- `False`：更新失败（配置校验或执行异常）。
+- 健康与连接状态需要结合 `wait_service` / `check_health` 另行确认。
 
-```python
-from mcpstore import MCPStore
-
-# 初始化
-store = MCPStore.setup_store()
-
-# 更新URL类型服务
-url_config = {
-    "url": "https://api.upgraded-weather.com/mcp",
-    "transport": "http",
-    "headers": {
-        "User-Agent": "MCPStore/1.0",
-        "API-Version": "v2"
-    },
-    "timeout": 60
-}
-
-success = store.for_store().update_service("weather", url_config)
-print(f"URL服务更新: {'成功' if success else '失败'}")
-```
-
-### 更新命令服务
-
-```python
-from mcpstore import MCPStore
-
-# 初始化
-store = MCPStore.setup_store()
-
-# 更新命令类型服务
-command_config = {
-    "command": "node",
-    "args": ["weather-server.js", "--config", "production.json"],
-    "cwd": "/opt/weather-service",
-    "env": {
-        "NODE_ENV": "production",
-        "LOG_LEVEL": "info"
-    }
-}
-
-success = store.for_store().update_service("weather", command_config)
-print(f"命令服务更新: {'成功' if success else '失败'}")
-```
-
-### 异步版本
-
-```python
-import asyncio
-from mcpstore import MCPStore
-
-async def async_update_service():
-    # 初始化
-    store = MCPStore.setup_store()
-    
-    # 新配置
-    new_config = {
-        "url": "https://api.async-weather.com/mcp",
-        "transport": "websocket",
-        "reconnect": True
-    }
-    
-    # 异步更新服务
-    success = await store.for_store().update_service_async("weather", new_config)
-    
-    if success:
-        print("异步更新成功")
-        # 验证更新结果
-        service_info = await store.for_store().get_service_info_async("weather")
-        print(f"更新后的服务信息: {service_info}")
-    
-    return success
-
-# 运行异步更新
-result = asyncio.run(async_update_service())
-```
-
-### 批量更新服务
-
-```python
-from mcpstore import MCPStore
-
-# 初始化
-store = MCPStore.setup_store()
-
-# 批量更新多个服务
-services_to_update = {
-    "weather": {
-        "url": "https://api.weather-v2.com/mcp",
-        "timeout": 30
-    },
-    "database": {
-        "command": "python",
-        "args": ["db_server.py", "--version", "2.0"]
-    }
-}
-
-for service_name, config in services_to_update.items():
-    success = store.for_store().update_service(service_name, config)
-    print(f"更新 {service_name}: {'成功' if success else '失败'}")
-```
-
-## 配置格式
-
-### URL服务配置
-```python
-{
-    "url": "https://api.example.com/mcp",
-    "transport": "http|websocket",
-    "headers": {"key": "value"},
-    "timeout": 30,
-    "reconnect": True
-}
-```
-
-### 命令服务配置
-```python
-{
-    "command": "executable",
-    "args": ["arg1", "arg2"],
-    "cwd": "/working/directory",
-    "env": {"VAR": "value"}
-}
-```
-
-## 与 patch_service() 的区别
-
-| 特性 | update_service() | patch_service() |
-|------|------------------|-----------------|
-| 更新方式 | 完全替换 | 增量更新 |
-| 原有配置 | 会被清除 | 会被保留 |
-| 使用场景 | 重大配置变更 | 小幅调整 |
-| 安全性 | 需要完整配置 | 更安全 |
-
-### 你可能想找的方法
-
-| 场景/方法       | 同步方法 |
-|------------------|----------|
-| 增量更新服务     | `store.for_store().patch_service(name, patch)` |
-| 重启服务         | `store.for_store().restart_service(name)` |
-| 获取服务信息     | `store.for_store().get_service_info(name)` |
-| 获取服务状态     | `store.for_store().get_service_status(name)` |
-| 删除服务         | `store.for_store().delete_service(name)` |
-| 注册服务         | `store.for_store().add_service(config=..., ...)` |
-| 查找服务         | `store.for_store().find_service(name)` |
-| Agent 更新       | `store.for_agent(id).update_service(name, config)` |
-
-## 注意事项
-
-- 完全替换：会清除所有原有配置，只保留新配置
-- 服务重启：更新配置后服务可能自动重启
-- 配置验证：新配置会进行格式验证
-- Agent 映射：Agent 模式下自动处理服务名映射
-- 推荐：小幅修改建议使用 `patch_service()`
+## 相关与下一步
+- 增量更新：`patch-service.md`
+- 删除服务：`delete-service.md`
+- 重启服务：`restart-service.md`
+- 鉴权配置：`../auth/headers.md`
+- 查看配置：`show-config.md`

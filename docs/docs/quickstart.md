@@ -1,8 +1,4 @@
-<div align="center">
-  <img src="assets/logo.svg" alt="MCPStore" width="400"/>
-</div>
-
----
+![MCPStore](assets/logo.svg)
 
 ### mcpstore 是什么？
 

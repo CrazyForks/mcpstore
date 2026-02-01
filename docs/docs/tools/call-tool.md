@@ -1,7 +1,7 @@
 ## call_tool - 工具调用
 
 
-MCPStore 推荐的工具调用方法，兼容 FastMCP 命名与能力，支持多种工具名格式、参数处理与完善的错误处理。
+MCPStore 推荐的工具调用方法，兼容 MCPStore 命名与能力，支持多种工具名格式、参数处理与完善的错误处理。
 
 ### SDK
 
@@ -29,7 +29,7 @@ MCPStore 推荐的工具调用方法，兼容 FastMCP 命名与能力，支持�
 
 - 类型：`Any`
 - 说明：
-  - 当 `return_extracted=False`：返回完整的 FastMCP CallToolResult 对象（含元数据）。
+  - 当 `return_extracted=False`：返回完整的 MCPStore CallToolResult 对象（含元数据）。
   - 当 `return_extracted=True`：返回提取后的数据（自动提取 content/text/data）。
 
 

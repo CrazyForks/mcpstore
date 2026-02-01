@@ -266,10 +266,7 @@ health_all = store.for_store().check_services()  # 检查所有服务
 
 ## 相关方法
 
-- [health_details()](health-details.md) - 获取详细健康信息
-- [check_services()](check-services.md) - 检查所有服务健康状态
-- [service_status()](../details/service-status.md) - 获取服务状态
-- [wait_service()](../waiting/wait-service.md) - 等待服务就绪
+无相关方法链接
 
 ## 注意事项
 

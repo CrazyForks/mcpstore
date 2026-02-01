@@ -41,17 +41,6 @@ print(f"所属服务: {info['service_name']}")
 # 获取工具标签
 tags = tool_proxy.tool_tags()
 print(f"工具标签: {tags}")
-
-# 获取工具输入模式（JSON Schema）
-schema = tool_proxy.tool_schema()
-print(f"输入模式: {schema}")
-```
-
-#### 工具配置
-
-```python
-# 设置重定向标记（用于 LangChain return_direct）
-tool_proxy.set_redirect(True)
 ```
 
 #### 工具调用
@@ -61,22 +50,6 @@ tool_proxy.set_redirect(True)
 result = tool_proxy.call_tool({"query": "北京天气"})
 print(f"调用结果: {result.text_output}")
 print(f"是否出错: {result.is_error}")
-```
-
-#### 工具统计
-
-```python
-# 获取使用统计
-stats = tool_proxy.usage_stats()
-print(f"调用次数: {stats['call_count']}")
-print(f"平均耗时: {stats['avg_duration']}")
-
-# 获取调用历史
-history = tool_proxy.call_history(limit=10)
-for record in history:
-    print(f"调用时间: {record['called_at']}")
-    print(f"参数: {record['arguments']}")
-    print(f"结果: {record['result']}")
 ```
 
 ### Store vs Agent 模式
@@ -129,29 +102,16 @@ print("\n=== 工具标签 ===")
 tags = tool_proxy.tool_tags()
 print(f"标签: {tags}")
 
-print("\n=== 工具模式 ===")
-schema = tool_proxy.tool_schema()
-print(f"输入模式: {schema}")
-
 print("\n=== 调用工具 ===")
 result = tool_proxy.call_tool({"query": "北京"})
 print(f"结果: {result.text_output}")
-
-print("\n=== 使用统计 ===")
-stats = tool_proxy.usage_stats()
-print(f"统计: {stats}")
-
-print("\n=== 调用历史 ===")
-history = tool_proxy.call_history(limit=5)
-print(f"历史记录数: {len(history)}")
 ```
 
 ### 相关文档
 
 - [find_tool()](find-tool.md) - 查找工具获取 ToolProxy
-- [tool_info()](../details/tool-info.md) - 工具详情方法
-- [call_tool()](../usage/call-tool.md) - 工具调用方法
-- [set_redirect()](../config/set-redirect.md) - 工具配置方法
+- [tool_info()](tool-info.md) - 工具详情方法
+- [call_tool()](call-tool.md) - 工具调用方法
 
 ### 设计理念
 
