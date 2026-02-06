@@ -485,14 +485,10 @@ tools = await get_tools_from_cache()
 
 ### 相关文档
 
-- [call_tool()](../usage/call-tool.md) - 工具调用方法
-- [use_tool()](../usage/use-tool.md) - 工具使用方法（兼容别名）
-- [服务列表查询](../../services/listing/list-services.md) - 获取服务列表
-- [工具使用概览](../usage/tool-usage-overview.md) - 工具使用概览
+- [call_tool()](call-tool.md) - 工具调用方法
+- [服务列表查询](../services/list-services.md) - 获取服务列表
 
 ### 下一步
 
-- 学习 [工具调用方法](../usage/call-tool.md)
-- 了解 [工具使用概览](../usage/tool-usage-overview.md)
-- 掌握 [服务列表查询](../../services/listing/list-services.md)
-- 查看 [工具管理操作](../management/tool-management.md)
+- 学习 [工具调用方法](call-tool.md)
+- 掌握 [服务列表查询](../services/list-services.md)

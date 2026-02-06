@@ -1,72 +1,50 @@
-# 服务代理（ServiceProxy）
+# 代理对象
 
-> 通过 `find_service(name)` 获得的对象，封装了“该服务”相关的全部操作，方法命名采用两词法。
+MCPStore 通过多层代理对象提供一致的调用接口。常用代理与职责如下：
 
-- 实现位置：src/mcpstore/core/context/service_proxy.py
-- 设计目标：
-  - 缩小作用域：所有操作都绑定在一个具体服务上
-  - 命名统一：方法采用“两词法”，与 SDK 其他接口风格一致
-  - 兼容 agent/store 两种上下文，透明处理服务名映射（Agent 本地名 ↔ 全局名）
+## Store 对象（MCPStore）
+- 获取方式：`store = MCPStore.setup_store()`。
+- 作用：顶层对象，提供 `for_store()` 与 `for_agent(agent_id)` 获取上下文代理。
+- 典型能力：服务管理、工具/资源调用、Hub 暴露、配置查看。
 
-## 核心方法与属性
-
-- 信息与状态
-  - service_info() → 返回服务详情（ServiceInfo + 工具清单）
-  - service_status() → 返回缓存状态快照（status、healthy、last_check、response_time 等）
-  - check_health() → 返回健康摘要（service_name、status、healthy、response_time、error_message）
-  - health_details() → 返回健康详情（effective_name、lifecycle_state、response_time、timestamp、error_message、details）
-  - is_healthy() → bool
-  - is_connected → bool（属性，带回退判断）
-
-- 工具
-  - list_tools() → List[ToolInfo]（优先 Registry 按服务获取，失败回退全量过滤）
-  - tools_stats() → Dict（仅当前服务的工具统计 + 清单）
-
-- 配置与运行态管理
-  - update_config(config) → bool（单一数据源 mcp.json 写入 + 同步 + 缓存更新）
-  - patch_config(updates) → bool（增量更新）
-  - restart_service() → bool
-  - refresh_content() → bool（同步封装 await）
-  - remove_service() → bool（运行态移除/断连）
-  - delete_service() → bool（配置+缓存删除）
-
-- 便捷属性
-  - name：服务名
-  - context_type：上下文类型（store/agent）
-  - tools_count：工具数量
-
-## 返回结构与字段说明
-
-- ServiceInfo（主要字段）
-  - name、url、transport_type、status（7 状态）、tool_count、keep_alive、working_dir、env、command、args、package_name
-  - state_metadata（consecutive_failures、last_ping_time、error_message、service_config 等）
-  - last_state_change、client_id、config
-
-- 工具详情（工具列表元素字段）
-  - name（显示名）、display_name（友好展示名）、original_name（FastMCP 原始名）、description
-  - inputSchema（JSON Schema）、service_name、client_id
-
-## Agent 上下文的透明映射
-
-- find_service 返回的 ServiceProxy 在 Agent 上下文会自动处理“本地名 ↔ 全局名”映射：
-  - health_details 会对 effective_name 使用全局名
-  - list_tools/tools_stats 会在内部以全局名查工具后转换为本地名展示
-
-## 示例
-
+## Store 代理（StoreProxy / MCPStoreContext）
+- 获取方式：`store.for_store()`。
+- 作用：全局视角管理服务与工具；列出/添加/更新/删除服务；健康检查；Hub 暴露。
+- 示例：
 ```python
-from mcpstore import MCPStore
-store = MCPStore.setup_store()
-
-# Store
-svc = store.for_store().find_service("mcpstore-demo-weather")
-print(svc.service_info())
-print(svc.tools_stats())
-print(svc.check_health())
-
-# Agent
-svc2 = store.for_agent("agent_demo").find_service("mcpstore-demo-weather")
-print(svc2.service_status())
-print(svc2.health_details())
+store_ctx = store.for_store()
+store_ctx.add_service({...})
+services = store_ctx.list_services()
 ```
 
+## Agent 代理（AgentProxy）
+- 获取方式：`store.for_agent("agentA")`。
+- 作用：在指定 Agent 分组内管理服务与工具，实现隔离；方法与 StoreProxy 对齐。
+- 示例：
+```python
+agent_ctx = store.for_agent("agentA")
+agent_ctx.add_service({...})
+tools = agent_ctx.list_tools()
+```
+
+## 服务代理（ServiceProxy）
+- 获取方式：`store.for_store().find_service("service_name")` 或 `agent_ctx.find_service("name")`。
+- 作用：操作单个服务：查看信息/状态、健康检查、更新/补丁、重启、删除、列工具。
+- 示例：
+```python
+svc = store.for_store().find_service("weather")
+info = svc.service_info()
+svc.patch_config({"timeout": 30})
+svc.restart_service()
+```
+
+## 工具/资源代理（通过列表返回的条目）
+- 工具：`list_tools()` 返回的工具对象可直接用于调用。
+- 资源：`list_resources()` / `read_resource()` 提供资源读取接口。
+
+## 相关链接
+- 构建 Store：`../store/overview.md`
+- store 与 agent 的关系：`../store/overview.md#store-与-agent-的关系`
+- 添加/更新/补丁服务：`add-service.md`、`update-service.md`、`patch-service.md`
+- 重启/删除/列表/健康：`restart-service.md`、`delete-service.md`、`list-services.md`、`check-health.md`
+- Hub 暴露：`../hub/services.md`

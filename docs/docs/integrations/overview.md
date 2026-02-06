@@ -246,7 +246,7 @@ store = MCPStore.setup_store(debug=True)
 
 - [工具管理概览](../tools/overview.md) - 了解工具管理基础
 - [服务管理概览](../services/overview.md) - 了解服务管理
-- [快速上手指南](../getting-started/quickstart.md) - 快速入门
+- [快速上手指南](../quickstart.md) - 快速入门
 
 ---
 

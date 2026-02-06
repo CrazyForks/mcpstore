@@ -8,11 +8,11 @@ MCPStore 提供了完整的工具管理功能，按照功能分类为5个核心�
 查找工具并获取工具代理对象或列表。
 
 **核心方法**:
-- **[find_tool()](finding/find-tool.md)** - 查找工具并返回 ToolProxy
-- **[list_tools()](finding/list-tools.md)** - 列出所有可用工具
+- **[find_tool()](find-tool.md)** - 查找工具并返回 ToolProxy
+- **[list_tools()](list-tools.md)** - 列出所有可用工具
 
 **相关文档**:
-- [ToolProxy 概念](finding/tool-proxy.md) - 了解工具代理机制
+- [ToolProxy 概念](tool-proxy.md) - 了解工具代理机制
 
 ---
 
@@ -20,9 +20,8 @@ MCPStore 提供了完整的工具管理功能，按照功能分类为5个核心�
 获取工具的详细信息、标签和输入模式。
 
 **核心方法**:
-- **[tool_info()](details/tool-info.md)** - 获取工具详细信息
-- **[tool_tags()](details/tool-tags.md)** - 获取工具标签
-- **[tool_schema()](details/tool-schema.md)** - 获取工具输入模式
+- **[tool_info()](tool-info.md)** - 获取工具详细信息
+- **[tool_tags()](tool-tags.md)** - 获取工具标签
 
 > 💡 **提示**: 这些方法需要先通过 `find_tool()` 获取 ToolProxy 对象后调用
 
@@ -32,8 +31,7 @@ MCPStore 提供了完整的工具管理功能，按照功能分类为5个核心�
 调用工具执行操作。
 
 **核心方法**:
-- **[call_tool()](usage/call-tool.md)** - 调用指定工具（推荐）
-- **[use_tool()](usage/use-tool.md)** - 调用工具的向后兼容别名
+- **[call_tool()](call-tool.md)** - 调用指定工具（推荐）
 
 **使用方式**:
 - **Context 级别**: `store.for_store().call_tool("tool_name", args)`
@@ -44,9 +42,6 @@ MCPStore 提供了完整的工具管理功能，按照功能分类为5个核心�
 ### 4. ⚙️ **工具配置**
 配置工具行为，如设置重定向标记。
 
-**核心方法**:
-- **[set_redirect()](config/set-redirect.md)** - 设置工具重定向标记（用于 LangChain return_direct）
-
 **应用场景**:
 - LangChain 集成
 - 直接返回工具结果
@@ -56,11 +51,6 @@ MCPStore 提供了完整的工具管理功能，按照功能分类为5个核心�
 
 ### 5. 📈 **工具统计**
 获取工具的使用统计和调用历史。
-
-**核心方法**:
-- **[usage_stats()](stats/usage-stats.md)** - 获取工具使用统计（ToolProxy）
-- **[call_history()](stats/call-history.md)** - 获取工具调用历史（ToolProxy）
-- **[tools_stats()](stats/tools-stats.md)** - 获取服务工具统计（ServiceProxy）
 
 **对比**:
 | 方法 | 调用层级 | 统计范围 |
@@ -190,17 +180,11 @@ svc.tools_stats()     # 服务工具统计
 
 | 功能 | 方法 | 调用层级 | 文档 |
 |------|------|----------|------|
-| **查找** | find_tool() | Context | [查看](finding/find-tool.md) |
-| **列表** | list_tools() | Context / ServiceProxy | [查看](finding/list-tools.md) |
-| **详情** | tool_info() | ToolProxy | [查看](details/tool-info.md) |
-| **标签** | tool_tags() | ToolProxy | [查看](details/tool-tags.md) |
-| **模式** | tool_schema() | ToolProxy | [查看](details/tool-schema.md) |
-| **调用** | call_tool() | Context / ToolProxy | [查看](usage/call-tool.md) |
-| **别名** | use_tool() | Context | [查看](usage/use-tool.md) |
-| **配置** | set_redirect() | ToolProxy | [查看](config/set-redirect.md) |
-| **统计** | usage_stats() | ToolProxy | [查看](stats/usage-stats.md) |
-| **历史** | call_history() | ToolProxy | [查看](stats/call-history.md) |
-| **服务统计** | tools_stats() | ServiceProxy | [查看](stats/tools-stats.md) |
+| **查找** | find_tool() | Context | [查看](find-tool.md) |
+| **列表** | list_tools() | Context / ServiceProxy | [查看](list-tools.md) |
+| **详情** | tool_info() | ToolProxy | [查看](tool-info.md) |
+| **标签** | tool_tags() | ToolProxy | [查看](tool-tags.md) |
+| **调用** | call_tool() | Context / ToolProxy | [查看](call-tool.md) |
 
 ---
 
@@ -223,7 +207,7 @@ tool_proxy.usage_stats()        # 统计
 tool_proxy.call_history()       # 历史
 ```
 
-详见：[ToolProxy 概念](finding/tool-proxy.md)
+详见：[ToolProxy 概念](tool-proxy.md)
 
 ### 工具名称格式
 MCPStore 支持多种工具名称格式：
@@ -244,9 +228,8 @@ tool = store.for_store().find_tool("weather_get_weather")
 ## 🔗 **相关文档**
 
 - [服务管理概览](../services/overview.md) - 了解服务管理
-- [ServiceProxy 概念](../services/listing/service-proxy.md) - 理解服务代理
-- [ToolProxy 概念](finding/tool-proxy.md) - 理解工具代理
-- [最佳实践](../advanced/best-practices.md) - 工具使用最佳实践
+- [ServiceProxy 概念](../services/service-proxy.md) - 理解服务代理
+- [ToolProxy 概念](tool-proxy.md) - 理解工具代理
 
 ---
 

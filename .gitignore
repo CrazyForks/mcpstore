@@ -16,22 +16,15 @@
 
 # 许可和发布文件
 !LICENSE
-!PUBLISH.md
-!MANIFEST.in
+
 
 # Python 项目配置文件
 !pyproject.toml
-!pytest.ini
+
 
 # Docker 配置
 !docker-compose.yml
-!.dockerignore
 
-# 环境配置示例
-!.env.example
-
-# 包管理器锁文件
-!uv.lock
 
 # ============================================
 # 第三步：放行重要目录及其内容
@@ -48,7 +41,10 @@
 # --- vue/ 目录（前端项目） ---
 !vue/
 !vue/**
+
 # Vue 项目需要忽略的内容
+
+
 vue/node_modules/
 vue/dist/
 vue/.nuxt/
@@ -67,9 +63,6 @@ vue/.venv/
 !example/
 !example/**
 
-# --- tests/ 目录（测试文件） ---
-!tests/
-!tests/**
 
 # ============================================
 # 第四步：忽略不需要的内容
@@ -120,7 +113,7 @@ temp/
 uploads/
 **/.DS_Store
 
-# MCP 和其他工具配置
+
 .mcpstore/
 .serena/
 .specstory/
@@ -129,7 +122,6 @@ uploads/
 .kiro/
 .home/
 
-# 其他
 .git/
 *.bak
 vulture_report.json
