@@ -302,7 +302,6 @@ def setup_store(
     static_config: dict | None = None,
     cache_mode: str = "auto",
     only_db: bool = False,
-    mcp_config_file: str | None = None,
     **kwargs,
 ) -> "MCPStore":
     """
@@ -316,7 +315,6 @@ def setup_store(
         static_config: Service config added after setup through Rust facade
         cache_mode: auto/local/hybrid/shared
         only_db: Use Rust db source mode
-        mcp_config_file: Alias for mcpjson_path
     
     Returns:
         MCPStore instance
@@ -338,7 +336,6 @@ def setup_store(
 | `static_config` | `dict | None` | `None` | Service config added through Rust facade after setup |
 | `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `hybrid`, `shared` |
 | `only_db` | `bool` | `False` | Use Rust db source mode |
-| `mcp_config_file` | `str | None` | `None` | Alias for `mcpjson_path` |
 
 **Examples**:
 
