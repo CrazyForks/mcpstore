@@ -6,12 +6,12 @@ MCPStore 推荐的工具调用方法，兼容 MCPStore 命名与能力，支持�
 ### SDK
 
 同步：
-  - `store.for_store().call_tool(tool_name, args=None, return_extracted=False, **kwargs) -> Any`
-  - `store.for_agent(id).call_tool(tool_name, args=None, return_extracted=False, **kwargs) -> Any`
+  - `store.for_store().call_tool(tool_name, args=None, return_extracted=False) -> Any`
+  - `store.for_agent(id).call_tool(tool_name, args=None, return_extracted=False) -> Any`
 
 异步：
-  - `await store.for_store().call_tool_async(tool_name, args=None, return_extracted=False, **kwargs) -> Any`
-  - `await store.for_agent(id).call_tool_async(tool_name, args=None, return_extracted=False, **kwargs) -> Any`
+  - `await store.for_store().call_tool_async(tool_name, args=None, return_extracted=False) -> Any`
+  - `await store.for_agent(id).call_tool_async(tool_name, args=None, return_extracted=False) -> Any`
 
 ### 参数
 
@@ -20,10 +20,6 @@ MCPStore 推荐的工具调用方法，兼容 MCPStore 命名与能力，支持�
 | `tool_name`        | str                     | 工具名称，支持多种格式（见“工具名称解析”）。 |
 | `args`             | dict                    | 工具参数；同步和异步版本都使用 Python 字典。 |
 | `return_extracted` | bool                    | 是否提取返回数据；True 返回提取后的数据，False 返回完整结果对象。 |
-| `timeout`          | float                   | 超时时间（秒），通过 `**kwargs` 传入。 |
-| `progress_handler` | Callable[[Any], None]   | 进度回调，通过 `**kwargs` 传入。 |
-| `raise_on_error`   | bool                    | 发生错误时是否抛出异常（默认 True），通过 `**kwargs` 传入。 |
-| `session_id`       | str                     | 会话 ID（可选），通过 `**kwargs` 传入。 |
 
 ### 返回值
 
@@ -107,7 +103,7 @@ for tool_name, args in tools_to_call:
         print(tool_name, "调用失败:", e)
 ```
 
-高级参数与额外选项：
+复杂参数：
 ```python
 from mcpstore import MCPStore
 
@@ -124,12 +120,9 @@ detail = store.for_store().call_tool(
     complex_args
 )
 
-# 使用额外参数（超时与进度回调）
 processed = store.for_store().call_tool(
     "slow-service_process_data",
-    {"data": "large_dataset"},
-    timeout=30.0,
-    progress_handler=lambda p: print(f"进度: {p}%")
+    {"data": "large_dataset"}
 )
 ```
 
@@ -143,7 +136,7 @@ store = MCPStore.setup_store()
 def call_tool_with_retry(tool_name, args, max_retries=3):
     for attempt in range(max_retries):
         try:
-            return store.for_store().call_tool(tool_name, args, timeout=10.0)
+            return store.for_store().call_tool(tool_name, args)
         except Exception as e:
             if attempt == max_retries - 1:
                 raise
@@ -155,11 +148,9 @@ try:
 except Exception as e:
     print("最终失败:", e)
 
-# 不抛出异常的调用
 result = store.for_store().call_tool(
     "might-fail_operation",
-    {"param": "value"},
-    raise_on_error=False
+    {"param": "value"}
 )
 print("调用结果:", result)
 ```
@@ -348,6 +339,6 @@ print("平均耗时(秒):", f"{(total_duration / len(results)):.2f}")
 
 - 名称解析：在 Agent 模式下支持本地名称，系统自动映射为全局名称。
 - 参数约束：`args` 使用 Python 字典；PyO3 绑定会把字典转入 Rust core，不需要先序列化为 JSON 字符串。
-- 错误处理：`raise_on_error=False` 时不抛异常，请检查返回对象中的错误字段。
-- 性能：密集调用建议设置 `timeout` 并采用异步并发以提升吞吐。
-- 会话：在需要上下文粘性的场景可传入 `session_id`。
+- 错误处理：失败会体现在返回对象或异常中，按所调用的 MCP 服务行为处理。
+- 性能：密集调用建议采用异步并发以提升吞吐。
+- 会话：需要上下文粘性时使用 `with_session()` / `session_auto()` 管理会话。
