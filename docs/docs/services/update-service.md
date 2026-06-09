@@ -1,25 +1,27 @@
 # 更新服务（update_service）
 
-全量替换指定服务的配置，适用于需要重写服务端点、启动命令或认证信息的场景。
+更新指定服务的配置。Python SDK 中 `update_service` 与 `patch_service` 一样执行补丁式更新；需要全量替换时使用 `replace_service_config`。
 
 ## 概念与前置
 - Store：全局服务仓库，`for_store()` 操作全局可见的服务（参见 [服务管理概览](overview.md)）。
 - Agent：逻辑分组，`for_agent(agent_id)` 仅在该分组内可见，适合隔离上下文。
-- 全量更新：`update_service` 会覆盖原有配置，未提供的字段会被清空；若仅需增量修改，请改用 `patch-service.md`。
+- 补丁更新：`update_service` 会合并传入字段，未提供的字段保留不变。
+- 全量替换：需要重写完整配置时使用 `replace_service_config`。
 - 必须前置：已通过 `MCPStore.setup_store()` 初始化 Store（参见 [快速上手](../quickstart.md)），目标服务已存在。
 
 ## 主要方法
 | 场景 | 标准用法 | 返回值 | 说明 |
 | ---- | -------- | ------ | ---- |
-| 全局更新 | `store.for_store().update_service(name, config)` | `bool` | 同步全量替换指定服务配置 |
+| 全局更新 | `store.for_store().update_service(name, config)` | `bool` | 同步补丁式更新指定服务配置 |
 | Agent 更新 | `store.for_agent("agentA").update_service(name, config)` | `bool` | 仅更新该 Agent 分组下的服务 |
-| 异步形式 | `await store.for_store().update_service_async(name, config)` | `bool` | 异步全量替换 |
+| 全量替换 | `store.for_store().replace_service_config(name, config)` | `bool` | 同步全量替换指定服务配置 |
+| 异步形式 | `await store.for_store().update_service_async(name, config)` | `bool` | 异步补丁式更新 |
 
 ## 参数说明
 | 参数 | 类型 | 必填 | 说明 | 示例 |
 | ---- | ---- | ---- | ---- | ---- |
 | `name` | str | 是 | 服务名称 | `"weather"` |
-| `config` | dict / str | 是 | 新配置，完全替换旧配置；字符串时需为 JSON | 见下方示例 |
+| `config` | dict / str | 是 | 要更新的配置字段；字符串时需为 JSON | 见下方示例 |
 
 ## config 参数说明
 - 类型：dict / JSON 字符串。
@@ -43,7 +45,7 @@ from mcpstore import MCPStore
 store = MCPStore.setup_store()
 ```
 
-2) 全量更新服务配置
+2) 更新服务配置
 ```python
 new_config = {
     "url": "https://api.newweather.com/mcp",
@@ -91,7 +93,7 @@ print([s.name for s in services])
 ```
 
 ## 返回值
-- `True`：更新请求已执行（全量替换），不代表已就绪。
+- `True`：更新请求已执行，不代表已就绪。
 - `False`：更新失败（配置校验或执行异常）。
 - 健康与连接状态需要结合 `wait_service` / `check_health` 另行确认。
 
