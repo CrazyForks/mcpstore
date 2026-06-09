@@ -161,47 +161,31 @@ async def test_redis_persistence(redis_store):
 
 ---
 
-### Testing with Mock Redis
+### Testing with Isolated Redis Namespace
 
-Use fakeredis for tests without real Redis server.
+Use a dedicated Redis database or namespace for tests.
 
 ```python
 import pytest
 from mcpstore import MCPStore
 from mcpstore.config import RedisConfig
-from fakeredis import aioredis
 
 @pytest.fixture
-async def mock_redis_store():
-    """Create MCPStore with fake Redis."""
-    # Create fake Redis client
-    fake_redis = await aioredis.create_redis_pool(
-        "redis://localhost",
-        encoding="utf-8"
-    )
-    
+async def redis_test_store():
+    """Create MCPStore with an isolated Rust Redis backend."""
     config = RedisConfig(
-        client=fake_redis,
+        url="redis://localhost:6379/15",
         namespace="test"
     )
     
     store = MCPStore.setup_store(cache=config)
     yield store
-    
-    # Cleanup
-    fake_redis.close()
-    await fake_redis.wait_closed()
 
 @pytest.mark.asyncio
-async def test_with_fake_redis(mock_redis_store):
-    """Test with fake Redis - no real server needed."""
+async def test_with_redis(redis_test_store):
+    """Test with Redis through the Rust backend."""
     # Your test code here
     pass
-```
-
-**Installation**:
-```bash
-pip install fakeredis
 ```
 
 ---
@@ -479,43 +463,30 @@ REDIS_PASSWORD=your-secure-password
 
 ---
 
-## Enterprise Custom Client
+## Enterprise Redis URL
 
-### Reusing Existing Redis Client
+### Shared Connection Settings
 
-Share Redis client across multiple components.
+Pass connection settings to Rust instead of passing a Python Redis client.
 
 ```python
-from redis.asyncio import Redis, ConnectionPool
 from mcpstore import MCPStore
 from mcpstore.config import RedisConfig
 
-# Create shared connection pool
-pool = ConnectionPool(
+# Use host/port/password directly
+redis_config = RedisConfig(
     host="redis-cluster",
     port=6379,
     password="secret",
-    max_connections=200,
-    decode_responses=True
-)
-
-# Create Redis client
-redis_client = Redis(connection_pool=pool)
-
-# Use with MCPStore
-redis_config = RedisConfig(
-    client=redis_client,
-    namespace="enterprise"
+    namespace="enterprise",
+    max_connections=200
 )
 
 store = MCPStore.setup_store(cache=redis_config)
-
-# Redis client is shared and managed externally
-# MCPStore will NOT close this client on shutdown
 ```
 
 **Benefits**:
-- 🔄 Shared connection pool
+- 🔄 Rust owns the connection pool
 - 📊 Centralized monitoring
 - 🎯 Unified configuration
 - 💰 Resource efficiency
@@ -527,22 +498,15 @@ store = MCPStore.setup_store(cache=redis_config)
 Connect to Redis Cluster for high availability.
 
 ```python
-from redis.asyncio.cluster import RedisCluster
 from mcpstore import MCPStore
 from mcpstore.config import RedisConfig
 
-# Create Redis Cluster client
-redis_cluster = RedisCluster(
+redis_config = RedisConfig(
     host="redis-cluster",
     port=6379,
     password="secret",
+    namespace="cluster",
     max_connections=100
-)
-
-# Use with MCPStore
-redis_config = RedisConfig(
-    client=redis_cluster,
-    namespace="cluster"
 )
 
 store = MCPStore.setup_store(cache=redis_config)
@@ -561,27 +525,14 @@ store = MCPStore.setup_store(cache=redis_config)
 Use Redis Sentinel for automatic failover.
 
 ```python
-from redis.asyncio.sentinel import Sentinel
 from mcpstore import MCPStore
 from mcpstore.config import RedisConfig
 
-# Create Sentinel connection
-sentinel = Sentinel(
-    [('sentinel1', 26379), ('sentinel2', 26379), ('sentinel3', 26379)],
-    socket_timeout=5.0
-)
-
-# Get master connection
-redis_master = sentinel.master_for(
-    'mymaster',
-    password='secret',
-    socket_timeout=5.0
-)
-
-# Use with MCPStore
+# Point MCPStore at the current master endpoint exposed by your Sentinel setup.
 redis_config = RedisConfig(
-    client=redis_master,
-    namespace="sentinel"
+    url="redis://:secret@redis-master.service.local:6379/0",
+    namespace="sentinel",
+    socket_timeout=5.0
 )
 
 store = MCPStore.setup_store(cache=redis_config)

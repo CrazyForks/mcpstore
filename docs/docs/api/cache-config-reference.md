@@ -122,8 +122,6 @@ Configuration for Redis cache backend.
 ```python
 from dataclasses import dataclass
 from typing import Optional, Literal
-from redis.asyncio import Redis
-
 @dataclass
 class RedisConfig(BaseCacheConfig):
     # Connection options
@@ -133,7 +131,6 @@ class RedisConfig(BaseCacheConfig):
     db: Optional[int] = None
     password: Optional[str] = None
     namespace: Optional[str] = None
-    client: Optional[Redis] = None
     
     # Connection pool options
     max_connections: int = 50
@@ -158,7 +155,6 @@ class RedisConfig(BaseCacheConfig):
 | `db` | `Optional[int]` | `None` | Redis database number |
 | `password` | `Optional[str]` | `None` | Redis authentication password |
 | `namespace` | `Optional[str]` | `None` | Namespace for key isolation (default: "mcpstore") |
-| `client` | `Optional[Redis]` | `None` | Existing Redis client instance |
 
 #### Connection Pool Attributes
 
@@ -182,7 +178,7 @@ class RedisConfig(BaseCacheConfig):
 
 **Initialization Methods**:
 
-RedisConfig supports three initialization methods:
+RedisConfig supports two initialization methods:
 
 1. **Using URL**:
 ```python
@@ -199,19 +195,11 @@ config = RedisConfig(
 )
 ```
 
-3. **Using Existing Client**:
-```python
-from redis.asyncio import Redis
-
-redis_client = Redis(host="localhost", port=6379)
-config = RedisConfig(client=redis_client)
-```
-
 **Validation**:
 
 RedisConfig performs validation in `__post_init__`:
 
-- At least one of `client`, `url`, or `host` must be provided
+- At least one of `url` or `host` must be provided
 - `timeout` must be positive
 - `socket_timeout` must be positive
 - `max_connections` must be positive
@@ -245,13 +233,6 @@ config = RedisConfig(
     socket_timeout=10.0,
     health_check_interval=60
 )
-
-# Using existing Redis client
-from redis.asyncio import Redis, ConnectionPool
-
-pool = ConnectionPool(host="localhost", port=6379, max_connections=100)
-redis_client = Redis(connection_pool=pool)
-config = RedisConfig(client=redis_client, namespace="enterprise")
 
 # Use with MCPStore
 store = MCPStore.setup_store("mcp.json", cache=config)
@@ -573,9 +554,9 @@ config = RedisConfig(
 ```python
 # Missing connection info
 try:
-    config = RedisConfig()  # No url, host, or client
+    config = RedisConfig()  # No url or host
 except ValueError as e:
-    print(e)  # "Redis configuration requires either 'client', 'url', or 'host'..."
+    print(e)  # "Redis configuration requires either 'url' or 'host'..."
 
 # Invalid timeout
 try:
@@ -610,13 +591,9 @@ All configuration classes include full type annotations for IDE support:
 
 ```python
 from typing import Optional, Union, Literal
-from redis.asyncio import Redis
 
 # Type hints for cache parameter
 cache: Optional[Union[MemoryConfig, RedisConfig]] = None
-
-# Type hints for Redis client
-client: Optional[Redis] = None
 
 # Type hints for namespace
 namespace: Optional[str] = None
