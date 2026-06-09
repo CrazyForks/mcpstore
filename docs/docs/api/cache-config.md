@@ -246,13 +246,6 @@ store = MCPStore.setup_store(
     cache_mode="local"
 )
 
-# 显式指定混合模式
-store = MCPStore.setup_store(
-    mcpjson_path="./mcp.json",
-    cache=redis_config,
-    cache_mode="hybrid"
-)
-
 # 显式指定共享模式
 store = MCPStore.setup_store(
     mcpjson_path=None,
@@ -261,7 +254,7 @@ store = MCPStore.setup_store(
 )
 ```
 
-`hybrid` 当前保留为显式模式值，但不会恢复旧 Python wrapper 的混合读写逻辑；Rust source mode 仍由 `shared`/`only_db` 决定。
+当前 Rust-backed Python SDK 只接受 `auto`、`local`、`shared`；旧 Python wrapper 的 `hybrid` 混合读写模式不再保留。
 
 ---
 
@@ -417,7 +410,7 @@ redis_config = RedisConfig(
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
     cache=redis_config,
-    cache_mode="hybrid"
+    cache_mode="shared"
 )
 ```
 

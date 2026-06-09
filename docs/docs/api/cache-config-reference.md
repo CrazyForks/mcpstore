@@ -310,7 +310,7 @@ def setup_store(
         debug: Enable debug logging
         cache: Cache configuration object
         static_config: Service config added after setup through Rust facade
-        cache_mode: auto/local/hybrid/shared
+        cache_mode: auto/local/shared
         only_db: Use Rust db source mode
     
     Returns:
@@ -330,7 +330,7 @@ def setup_store(
 | `debug` | `bool | str` | `False` | Enable debug logging |
 | `cache` | `Optional[Union[MemoryConfig, RedisConfig]]` | `None` | Cache configuration |
 | `static_config` | `dict | None` | `None` | Service config added through Rust facade after setup |
-| `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `hybrid`, `shared` |
+| `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `shared` |
 | `only_db` | `bool` | `False` | Use Rust db source mode |
 
 **Examples**:
