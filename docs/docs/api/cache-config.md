@@ -65,9 +65,9 @@ store = MCPStore.setup_store(
 
 ## 包装器配置
 
-### 统计包装器
+### 缓存快照统计
 
-启用统计功能，自动记录缓存命中率、延迟等指标：
+Rust-backed Python SDK 当前通过 Rust cache inspect 暴露缓存快照计数。它不会伪造请求命中率、请求数或延迟指标；这些字段在返回值中会标记为不可用。
 
 ```python
 store = MCPStore.setup_store(
@@ -76,77 +76,47 @@ store = MCPStore.setup_store(
         "cache": {
             "type": "redis",
             "url": "redis://localhost:6379/0",
-            
-            # 启用统计
-            "enable_statistics": True
         }
     }
 )
 
-# 获取统计信息
+# 获取 Rust cache inspect 统计
 stats = await store.registry.get_cache_statistics()
-print(f"命中率: {stats['hit_rate']}")
-print(f"平均延迟: {stats['avg_latency_ms']}ms")
+print(f"后端: {stats['backend']}")
+print(f"实体数: {stats['entity_count']}")
+print(f"关系数: {stats['relation_count']}")
+print(f"请求指标可用: {stats['request_metrics_available']}")
 ```
 
 
-### 大小限制包装器
+### 当前支持的配置字段
 
-限制缓存对象的最大大小，防止内存溢出：
-
-```python
-store = MCPStore.setup_store(
-    mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            
-            # 启用大小限制
-            "enable_size_limit": True,
-            "max_item_size": 1024 * 1024  # 1MB
-        }
-    }
-)
-```
+Python SDK 会把 `external_db.cache` 解析成 Rust cache backend 配置，再通过 PyO3 初始化 Rust core。当前不会启用旧 Python wrapper；未列出的字段不会产生额外行为。
 
 **配置项**：
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `enable_size_limit` | `bool` | `True` | 是否启用大小限制 |
-| `max_item_size` | `int` | `1048576` | 最大对象大小（字节），默认 1MB |
+| `type` | `str` | `"memory"` | `memory` / `redis` / `openkeyv_memory` / `openkeyv_redis` |
+| `url` | `str` | `None` | Redis URL；Redis 后端推荐显式提供 |
+| `host` | `str` | `None` | 未提供 URL 时用于拼接 Redis 地址 |
+| `port` | `int` | `None` | 未提供 URL 时用于拼接 Redis 地址 |
+| `db` | `int` | `None` | Redis database |
+| `password` | `str` | `None` | Redis 密码 |
+| `namespace` | `str` | `None` | Rust cache namespace |
+| `max_connections` | `int` | `50` | Redis 连接池上限 |
+| `retry_on_timeout` | `bool` | `True` | Redis 超时时是否重试 |
+| `socket_keepalive` | `bool` | `True` | Redis keepalive |
+| `socket_connect_timeout` | `float` | `5.0` | Redis 连接超时 |
+| `socket_timeout` | `float` | `5.0` | Redis socket 超时 |
+| `health_check_interval` | `int` | `30` | Redis health check interval |
+| `allow_partial` | `bool` | `False` | Redis 部分不可用时是否允许继续 |
+| `timeout` | `float` | `2.0` | cache 操作超时 |
+| `retry_attempts` | `int` | `3` | cache 操作重试次数 |
+| `health_check` | `bool` | `True` | 是否执行健康检查 |
+| `max_size` | `int` | `None` | Memory/OpenKeyv memory 后端可使用的最大尺寸配置 |
 
-### 压缩包装器
-
-自动压缩大对象，节省存储空间：
-
-```python
-store = MCPStore.setup_store(
-    mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            
-            # 启用压缩
-            "enable_compression": True,
-            "compression_threshold": 512 * 1024  # 512KB
-        }
-    }
-)
-```
-
-**配置项**：
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `enable_compression` | `bool` | `False` | 是否启用压缩 |
-| `compression_threshold` | `int` | `524288` | 压缩阈值（字节），默认 512KB |
-
-### 组合包装器
-
-可以同时启用多个包装器：
+### 组合配置
 
 ```python
 store = MCPStore.setup_store(
@@ -155,23 +125,16 @@ store = MCPStore.setup_store(
         "cache": {
             "type": "redis",
             "url": "redis://localhost:6379/0",
-            
-            # 同时启用多个包装器
-            "enable_statistics": True,
-            "enable_size_limit": True,
-            "max_item_size": 1024 * 1024,
-            "enable_compression": True,
-            "compression_threshold": 512 * 1024
+            "namespace": "mcpstore_prod",
+            "max_connections": 50,
+            "socket_timeout": 2.0,
+            "socket_connect_timeout": 2.0,
+            "health_check_interval": 30,
+            "retry_attempts": 3,
         }
     }
 )
 ```
-
-**包装器顺序**（从内到外）：
-1. 基础存储（Memory/Redis）
-2. 大小限制（LimitSizeWrapper）
-3. 压缩（CompressionWrapper）
-4. 统计（StatisticsWrapper）
 
 ---
 
@@ -219,7 +182,7 @@ store = MCPStore.setup_store(
             
             # 连接池配置
             "max_connections": 50,
-            "healthcheck_interval": 30
+            "health_check_interval": 30
         }
     }
 )
@@ -230,7 +193,7 @@ store = MCPStore.setup_store(
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `max_connections` | `int` | `50` | 最大连接数 |
-| `healthcheck_interval` | `int` | `30` | 健康检查间隔（秒） |
+| `health_check_interval` | `int` | `30` | 健康检查间隔（秒） |
 
 ### 命名空间配置
 
@@ -383,39 +346,53 @@ await store.registry.switch_backend(memory_store)
 
 ## 统计信息 API
 
-### 获取缓存统计
+### 获取缓存快照统计
 
 ```python
-# 获取统计信息
+# 获取 Rust cache inspect 统计
 stats = await store.registry.get_cache_statistics()
 
-print(f"总请求数: {stats['total_requests']}")
-print(f"命中数: {stats['hits']}")
-print(f"未命中数: {stats['misses']}")
-print(f"命中率: {stats['hit_rate']:.2%}")
-print(f"平均延迟: {stats['avg_latency_ms']:.2f}ms")
-print(f"总数据大小: {stats['total_size_bytes']} bytes")
+print(f"后端: {stats['backend']}")
+print(f"命名空间: {stats['namespace']}")
+print(f"实体数: {stats['entity_count']}")
+print(f"关系数: {stats['relation_count']}")
+print(f"状态数: {stats['state_count']}")
+print(f"事件数: {stats['event_count']}")
+
+if not stats["request_metrics_available"]:
+    print("请求命中率/延迟指标当前未由 Rust cache inspect 提供")
 ```
 
 **返回字段**：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `total_requests` | `int` | 总请求数 |
-| `hits` | `int` | 命中数 |
-| `misses` | `int` | 未命中数 |
-| `hit_rate` | `float` | 命中率（0-1） |
-| `avg_latency_ms` | `float` | 平均延迟（毫秒） |
-| `p50_latency_ms` | `float` | P50 延迟（毫秒） |
-| `p95_latency_ms` | `float` | P95 延迟（毫秒） |
-| `p99_latency_ms` | `float` | P99 延迟（毫秒） |
-| `total_size_bytes` | `int` | 总数据大小（字节） |
+| `backend` | `str` | 当前 Rust cache 后端 |
+| `namespace` | `str` | 当前缓存命名空间 |
+| `request_metrics_available` | `bool` | 请求级命中率/延迟指标是否可用；当前为 `False` |
+| `total_requests` | `None` | 当前未由 Rust cache inspect 提供 |
+| `hits` | `None` | 当前未由 Rust cache inspect 提供 |
+| `misses` | `None` | 当前未由 Rust cache inspect 提供 |
+| `hit_rate` | `None` | 当前未由 Rust cache inspect 提供 |
+| `avg_latency_ms` | `None` | 当前未由 Rust cache inspect 提供 |
+| `p50_latency_ms` | `None` | 当前未由 Rust cache inspect 提供 |
+| `p95_latency_ms` | `None` | 当前未由 Rust cache inspect 提供 |
+| `p99_latency_ms` | `None` | 当前未由 Rust cache inspect 提供 |
+| `total_size_bytes` | `None` | 当前未由 Rust cache inspect 提供 |
+| `entity_count` | `int` | entity collection 条目数 |
+| `relation_count` | `int` | relation collection 条目数 |
+| `state_count` | `int` | state collection 条目数 |
+| `event_count` | `int` | event collection 条目数 |
 
 ### 重置统计信息
 
+Rust-backed Python SDK 当前没有独立的请求统计计数器，因此 `reset_cache_statistics()` 会抛出 `NotImplementedError`，不会假装重置成功。
+
 ```python
-# 重置统计计数器
-await store.registry.reset_cache_statistics()
+try:
+    await store.registry.reset_cache_statistics()
+except NotImplementedError:
+    print("Rust cache inspect 当前没有可重置的请求统计计数器")
 ```
 
 ---
@@ -439,14 +416,9 @@ store = MCPStore.setup_store(
             "socket_timeout": 2.0,
             "socket_connect_timeout": 2.0,
             "max_connections": 50,
-            "healthcheck_interval": 30,
-            
-            # 包装器配置
-            "enable_statistics": True,
-            "enable_size_limit": True,
-            "max_item_size": 1024 * 1024,  # 1MB
-            "enable_compression": True,
-            "compression_threshold": 512 * 1024  # 512KB
+            "health_check_interval": 30,
+            "retry_attempts": 3,
+            "health_check": True
         }
     },
     cache_mode="hybrid"
@@ -461,10 +433,9 @@ store = MCPStore.setup_store(
     external_db={
         "cache": {
             "type": "memory",
-            
-            # 开发环境启用统计
-            "enable_statistics": True,
-            "enable_size_limit": False
+            "timeout": 2.0,
+            "retry_attempts": 1,
+            "health_check": True
         }
     },
     cache_mode="local"
