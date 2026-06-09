@@ -1,6 +1,6 @@
 # get_info - Store 上下文信息
 
-返回当前 Store/Agent 上下文的轻量摘要。该方法由 Python façade 组合 Rust core 返回的数据，不依赖旧 Python core。
+返回当前 Store/Agent 上下文的轻量摘要。该方法由 Python façade 组合 Rust core 返回的数据。
 
 ## SDK
 
