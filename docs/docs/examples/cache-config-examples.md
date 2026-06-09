@@ -677,7 +677,7 @@ await configurable_store.reload_config(new_config)
 
 ### Export and Backup
 
-Regular backup of cache data to JSON files.
+Regular backup of Rust-backed MCP configuration to JSON files.
 
 ```python
 import asyncio
@@ -686,8 +686,8 @@ from pathlib import Path
 from mcpstore import MCPStore
 from mcpstore.config import RedisConfig
 
-async def backup_cache(store: MCPStore, backup_dir: str):
-    """Backup cache data to JSON file."""
+async def backup_config(store: MCPStore, backup_dir: str):
+    """Backup MCP configuration to JSON file."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_path = Path(backup_dir) / f"backup_{timestamp}.json"
     
@@ -698,7 +698,7 @@ async def backup_cache(store: MCPStore, backup_dir: str):
 async def scheduled_backup(store: MCPStore, backup_dir: str, interval: int):
     """Run backup on schedule."""
     while True:
-        await backup_cache(store, backup_dir)
+        await backup_config(store, backup_dir)
         await asyncio.sleep(interval)
 
 # Setup

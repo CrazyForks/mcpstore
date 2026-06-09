@@ -285,7 +285,7 @@ await store.export_to_json("./exported_config.json")
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `output_path` | `str` | 必填 | 输出文件路径 |
-| `include_sessions` | `bool` | `False` | 是否包含 Session（不可序列化） |
+| `include_sessions` | `bool` | `False` | 必须为 `False`；Rust core 当前不暴露可序列化 session state |
 
 ### 从 JSON 导入配置
 

@@ -374,23 +374,29 @@ store = MCPStore.setup_store("mcp.json", debug=True)
 
 ### exportjson()
 
-Export cache data to JSON format.
+Export the current Rust-backed MCP configuration to JSON format.
 
 ```python
 async def exportjson(
     self,
-    filepath: Optional[str] = None
+    filepath: Optional[str] = None,
+    *,
+    output_path: Optional[str] = None,
+    include_sessions: bool = False
 ) -> Dict[str, Any]:
     """
-    Export cache data to standard MCP JSON format.
+    Export Rust-backed store configuration to standard MCP JSON format.
     
     Args:
         filepath: Output file path (optional)
+        output_path: Output file path alias (optional)
+        include_sessions: Must be False; Rust core does not expose serializable session state.
     
     Returns:
         Dictionary with exported data in mcpServers format
     
     Raises:
+        NotImplementedError: If include_sessions=True
         IOError: If file write fails
         PermissionError: If insufficient permissions
     """
@@ -401,6 +407,8 @@ async def exportjson(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `filepath` | `Optional[str]` | `None` | Output file path (if None, only returns data) |
+| `output_path` | `Optional[str]` | `None` | Output file path alias |
+| `include_sessions` | `bool` | `False` | Must remain `False`; sessions are Python routing state, not Rust-serializable data |
 
 **Returns**:
 
