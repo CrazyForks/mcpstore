@@ -247,61 +247,6 @@ store = MCPStore.setup_store("mcp.json", cache=config)
 
 ---
 
-## Data Source Strategy
-
-### DataSourceStrategy
-
-Enum defining data source strategies.
-
-```python
-from enum import Enum
-
-class DataSourceStrategy(Enum):
-    JSON_MEMORY = "json_memory"
-    JSON_CUSTOM = "json_custom"
-    CUSTOM_ONLY = "custom_only"
-```
-
-**Values**:
-
-| Strategy | Description | Use Case |
-|----------|-------------|----------|
-| `JSON_MEMORY` | JSON file + Memory cache | Development, single-instance |
-| `JSON_CUSTOM` | JSON file + Custom cache (Redis) | Production with JSON config |
-| `CUSTOM_ONLY` | Custom cache only (no JSON) | Dynamic configuration, cloud-native |
-
-**Auto-Detection Logic**:
-
-```python
-def detect_strategy(
-    cache_config: Union[MemoryConfig, RedisConfig],
-    json_path: Optional[str]
-) -> DataSourceStrategy:
-    """
-    Automatically detect data source strategy.
-    
-    Logic:
-    - JSON + Memory → JSON_MEMORY
-    - JSON + Redis → JSON_CUSTOM
-    - No JSON + Any → CUSTOM_ONLY
-    """
-```
-
-**Examples**:
-
-```python
-# JSON_MEMORY strategy
-store = MCPStore.setup_store("mcp.json")  # Default MemoryConfig
-
-# JSON_CUSTOM strategy
-store = MCPStore.setup_store("mcp.json", cache=RedisConfig(url="..."))
-
-# CUSTOM_ONLY strategy
-store = MCPStore.setup_store(cache=RedisConfig(url="..."))  # No JSON path
-```
-
----
-
 ## Namespace Management
 
 ### get_namespace()
@@ -342,28 +287,6 @@ ns = get_namespace(config)  # Returns: "production"
 
 ---
 
-## Store Factory
-
-### create_kv_store()
-
-Removed. `mcpstore.config.factory` is no longer part of the Python SDK because
-MCPStore no longer creates Python-side cache stores.
-
-Use the Rust-backed cache facade instead:
-
-```python
-from mcpstore import MCPStore
-from mcpstore.config import MemoryConfig
-
-store = MCPStore.setup_store(cache=MemoryConfig())
-cache = store.for_store().find_cache()
-
-health = cache.health_check()
-snapshot = cache.inspect()
-```
-
----
-
 ## MCPStore Integration
 
 ### setup_store()
@@ -371,22 +294,31 @@ snapshot = cache.inspect()
 Create MCPStore instance with cache configuration.
 
 ```python
-@classmethod
 def setup_store(
-    cls,
-    mcpjson_path: Optional[Union[str, Path]] = None,
-    cache: Optional[Union[MemoryConfig, RedisConfig]] = None,
-    debug: bool = False,
-    **kwargs
+    mcpjson_path: str | None = None,
+    debug: bool | str = False,
+    cache: MemoryConfig | RedisConfig | None = None,
+    external_db: dict | None = None,
+    static_config: dict | None = None,
+    cache_mode: str = "auto",
+    only_db: bool = False,
+    mcp_config_file: str | None = None,
+    **kwargs,
 ) -> "MCPStore":
     """
-    Create MCPStore instance with cache configuration.
+    Create a Rust-backed MCPStore instance.
     
     Args:
         mcpjson_path: Path to MCP JSON configuration file (optional)
-        cache: Cache configuration object (optional, default: MemoryConfig())
-        debug: Enable debug mode
-        **kwargs: Additional configuration parameters
+        debug: Enable debug logging
+        cache: Cache configuration object
+        external_db: Dict cache configuration alias
+        static_config: Service config added after setup through Rust facade
+        cache_mode: auto/local/hybrid/shared
+        only_db: Use Rust db source mode
+        mcp_config_file: Alias for mcpjson_path
+        config_path: Alias for mcpjson_path, passed through kwargs
+        cache_config: Alias for cache, passed through kwargs
     
     Returns:
         MCPStore instance
@@ -402,9 +334,15 @@ def setup_store(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `mcpjson_path` | `Optional[Union[str, Path]]` | `None` | JSON configuration file path |
-| `cache` | `Optional[Union[MemoryConfig, RedisConfig]]` | `None` | Cache configuration (default: MemoryConfig()) |
-| `debug` | `bool` | `False` | Enable debug logging |
-| `**kwargs` | `Any` | - | Additional parameters |
+| `debug` | `bool | str` | `False` | Enable debug logging |
+| `cache` | `Optional[Union[MemoryConfig, RedisConfig]]` | `None` | Cache configuration |
+| `external_db` | `dict | None` | `None` | Dict cache configuration alias |
+| `static_config` | `dict | None` | `None` | Service config added through Rust facade after setup |
+| `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `hybrid`, `shared` |
+| `only_db` | `bool` | `False` | Use Rust db source mode |
+| `mcp_config_file` | `str | None` | `None` | Alias for `mcpjson_path` |
+| `config_path` | `str | None` | - | Alias for `mcpjson_path` |
+| `cache_config` | `MemoryConfig | RedisConfig | None` | - | Alias for `cache` |
 
 **Examples**:
 
