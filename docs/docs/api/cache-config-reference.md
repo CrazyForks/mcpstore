@@ -317,8 +317,6 @@ def setup_store(
         cache_mode: auto/local/hybrid/shared
         only_db: Use Rust db source mode
         mcp_config_file: Alias for mcpjson_path
-        config_path: Alias for mcpjson_path, passed through kwargs
-        cache_config: Alias for cache, passed through kwargs
     
     Returns:
         MCPStore instance
@@ -341,8 +339,6 @@ def setup_store(
 | `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `hybrid`, `shared` |
 | `only_db` | `bool` | `False` | Use Rust db source mode |
 | `mcp_config_file` | `str | None` | `None` | Alias for `mcpjson_path` |
-| `config_path` | `str | None` | - | Alias for `mcpjson_path` |
-| `cache_config` | `MemoryConfig | RedisConfig | None` | - | Alias for `cache` |
 
 **Examples**:
 

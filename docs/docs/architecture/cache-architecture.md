@@ -49,7 +49,7 @@ MCPStore 的缓存基于 `py-key-value`（Memory/Redis 可切换），采用三�
 
 ## 切换后端
 - 内存：默认。
-- Redis：通过缓存配置（`cache_config`）切换，保持相同命名规范。
+- Redis：通过 `setup_store(cache=...)` 切换，保持相同命名规范。
 
 ## 相关文档
 - 构建 Store：`../store/overview.md`

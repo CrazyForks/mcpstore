@@ -16,8 +16,8 @@
 > 返回的 `MCPStore` 支持 `for_store()` / `for_agent(agent_id)` 获取上下文代理，进而调用服务、工具、Hub、配置等功能。
 
 ## 常用参数
-- `config_path`：自定义配置文件路径（缺省读取默认 `mcp.json`）。
-- `cache_config`：切换缓存后端（如 Redis），详见缓存配置文档。
+- `mcpjson_path`：自定义配置文件路径（缺省读取默认 `mcp.json`）。
+- `cache`：切换缓存后端（如 Redis），详见缓存配置文档。
 - `debug`：启用调试日志。
 - 其他参数通常保持默认即可快速起步；高级参数可参考 SDK 文档与源码注释。
 
