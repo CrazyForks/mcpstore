@@ -10,9 +10,12 @@
 # 第二步：放行根目录的重要文件
 # ============================================
 # README 文档
+!.gitignore
 !README.md
 !README_zh.md
 !README_en.md
+!待优化项目rust。md
+!对于rust和pyhon版本的mcpstore报告.md
 
 # 许可和发布文件
 !LICENSE
@@ -21,9 +24,15 @@
 # Python 项目配置文件
 !pyproject.toml
 
-
-# Docker 配置
-!docker-compose.yml
+# Python SDK package
+!python/
+!python/pyproject.toml
+!python/README.md
+!python/uv.lock
+!python/src/
+!python/src/**
+!python/tests/
+!python/tests/**
 
 
 # ============================================
@@ -63,6 +72,14 @@ vue/.venv/
 !example/
 !example/**
 
+# --- tests/ 目录（测试代码） ---
+!tests/
+!tests/**
+
+# --- rust/ 目录（Rust 重构实现） ---
+!rust/
+!rust/**
+rust/target/
 
 # ============================================
 # 第四步：忽略不需要的内容
@@ -96,6 +113,8 @@ dist/
 build/
 *.egg-info/
 *.egg
+**/*.so
+**/*.dylib
 
 # IDE 配置文件
 .idea/
