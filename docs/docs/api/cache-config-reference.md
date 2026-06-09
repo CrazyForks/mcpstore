@@ -346,13 +346,8 @@ ns = get_namespace(config)  # Returns: "production"
 
 ### create_kv_store()
 
-Removed. MCPStore no longer creates Python-side cache stores.
-
-```python
-from mcpstore.config.factory import create_kv_store
-
-create_kv_store(...)  # raises RuntimeError
-```
+Removed. `mcpstore.config.factory` is no longer part of the Python SDK because
+MCPStore no longer creates Python-side cache stores.
 
 Use the Rust-backed cache facade instead:
 
