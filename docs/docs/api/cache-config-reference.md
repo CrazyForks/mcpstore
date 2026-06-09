@@ -370,7 +370,6 @@ async def exportjson(
     self,
     filepath: Optional[str] = None,
     *,
-    output_path: Optional[str] = None,
     include_sessions: bool = False
 ) -> Dict[str, Any]:
     """
@@ -378,7 +377,6 @@ async def exportjson(
     
     Args:
         filepath: Output file path (optional)
-        output_path: Output file path alias (optional)
         include_sessions: Must be False; Rust core does not expose serializable session state.
     
     Returns:
@@ -396,7 +394,6 @@ async def exportjson(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `filepath` | `Optional[str]` | `None` | Output file path (if None, only returns data) |
-| `output_path` | `Optional[str]` | `None` | Output file path alias |
 | `include_sessions` | `bool` | `False` | Must remain `False`; sessions are Python routing state, not Rust-serializable data |
 
 **Returns**:
