@@ -580,9 +580,9 @@ store_tenant_b = create_tenant_store("tenant_b")
 
 ---
 
-### Graceful Degradation
+### Explicit Application-Level Degradation
 
-Fallback to memory cache if Redis is unavailable.
+If Redis is unavailable, the application can explicitly create a new Rust-backed store with a memory cache. MCPStore itself does not silently fall back to a Python core or hidden cache backend.
 
 ```python
 import logging
@@ -591,8 +591,8 @@ from mcpstore.config import MemoryConfig, RedisConfig
 
 logger = logging.getLogger(__name__)
 
-def create_store_with_fallback(json_path: str) -> MCPStore:
-    """Create store with Redis, fallback to memory on failure."""
+def create_store_with_memory_degradation(json_path: str) -> MCPStore:
+    """Create a Rust-backed store with Redis, then explicitly retry with memory."""
     try:
         # Try Redis first
         redis_config = RedisConfig(
@@ -604,19 +604,19 @@ def create_store_with_fallback(json_path: str) -> MCPStore:
         logger.info("Using Redis cache")
         return store
     except Exception as e:
-        # Fallback to memory
+        # Explicit application-level degradation to Rust memory backend
         logger.warning(f"Redis unavailable, using memory cache: {e}")
         memory_config = MemoryConfig()
         store = MCPStore.setup_store(json_path, cache=memory_config)
         return store
 
 # Use in application
-store = create_store_with_fallback("mcp.json")
+store = create_store_with_memory_degradation("mcp.json")
 ```
 
 **Features**:
 - 🛡️ Fault tolerance
-- 🔄 Automatic fallback
+- 🔄 Explicit application-level degradation
 - 📊 Degraded mode operation
 - 🏥 Service continuity
 

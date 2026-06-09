@@ -301,23 +301,24 @@ await store.import_from_json("./config.json")
 ### 切换到 Redis
 
 ```python
-from key_value.aio.stores import RedisStore
+from mcpstore.config import RedisConfig
 
 # 初始使用内存
 store = MCPStore.setup_store(mcpjson_path="./mcp.json")
 
-# 切换到 Redis
-redis_store = RedisStore(
+# 切换到 Rust Redis backend
+redis_config = RedisConfig(
     url="redis://localhost:6379/0",
-    password="your_password"
+    password="your_password",
+    namespace="prod"
 )
-await store.registry.switch_backend(redis_store)
+await store.registry.switch_backend(redis_config)
 ```
 
 ### 切换到内存
 
 ```python
-from key_value.aio.stores import MemoryStore
+from mcpstore.config import MemoryConfig
 
 # 初始使用 Redis
 store = MCPStore.setup_store(
@@ -325,9 +326,9 @@ store = MCPStore.setup_store(
     external_db={"cache": {"type": "redis", ...}}
 )
 
-# 切换到内存
-memory_store = MemoryStore()
-await store.registry.switch_backend(memory_store)
+# 切换到 Rust memory backend
+memory_config = MemoryConfig()
+await store.registry.switch_backend(memory_config)
 ```
 
 ### 热插拔限制
@@ -468,10 +469,10 @@ except RuntimeError as e:
 
 ```python
 try:
-    await store.registry.switch_backend(new_backend)
-except CacheOperationError as e:
+    await store.registry.switch_backend(redis_config)
+except Exception as e:
     print(f"后端切换失败: {e}")
-    # 系统会自动回滚到旧后端
+    # switch_backend 会重新初始化 Rust core；失败时请重新 setup_store 或显式切换回可用配置。
 ```
 
 ---
