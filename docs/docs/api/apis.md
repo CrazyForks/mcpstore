@@ -4,7 +4,7 @@
 
 ## Store 管理
 - 配置查看：`GET /for_store/show_config`、`GET /for_store/show_mcpjson`、`GET /for_store/setup_config`
-- 配置变更：`PUT /for_store/update_config/{id}`、`DELETE /for_store/delete_config/{id}`、`POST /for_store/reset_config`
+- 配置变更：`POST /for_store/update_service/{id}`、`DELETE /for_store/service/{id}`、`POST /for_store/reset_config`
 - Rust 事件能力：`GET /for_store/sync_status`
 - Agent 汇总：`GET /for_store/list_agents`
 - 工具记录：`GET /for_store/tool_records`
