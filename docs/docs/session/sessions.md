@@ -1,7 +1,7 @@
 ## Session - 会话
 
 
-会话用于在多次工具调用之间保持服务状态（如浏览器页面、登录态、长连接等），避免每次调用新建/关闭连接带来的状态丢失与性能浪费。MCPStore 提供稳定、易用的会话管理，适用于 Store 与 Agent 两种上下文。
+会话是 Python SDK 里的上下文路由对象，用来在一段代码中复用同一组绑定服务与工具集合。工具调用仍通过 PyO3 进入 Rust core；当前 Rust core 不提供独立的 session lease、session-scoped cache 或服务端会话存储。
 
 ### SDK
 
@@ -22,7 +22,6 @@
 |---------------|------|------|
 | `session_id`  | str  | 会话标识；用于关联与复用同一次会话上下文。 |
 | `name`        | str  | 服务或工具名称；用于绑定或调用时指定目标。 |
-| `seconds`     | int  | `extend_session(seconds)` 的扩展秒数。 |
 
 ### 返回值
 
@@ -75,7 +74,9 @@ session.close_session()
 
 - 基础属性：`session.session_id`、`session.is_active`、`session.service_count`、`session.tool_count`
 - 信息查询：`session.session_info()`、`session.list_services()`、`session.list_tools()`、`session.connection_status()`
-- 使用与管理：`session.bind_service(name)`、`session.use_tool(name, args)`、`session.restart_session()`、`session.extend_session(seconds=3600)`、`session.clear_cache()`、`session.close_session()`
+- 使用与管理：`session.bind_service(name)`、`session.use_tool(name, args)`、`session.restart_session()`、`session.close_session()`
+
+`extend_session()` 和 `clear_cache()` 当前没有 Rust core 支撑，会抛出 `NotImplementedError`，不会假装成功。
 
 
 ### Store 与 Agent 上下文
@@ -120,8 +121,8 @@ AgentExecutor(agent=agent, tools=tools).invoke({"input": "打开百度并截图"
 
 ### 使用场景
 
-- 需要跨多次调用保留服务运行态（浏览器页面、登录态、连接等）。
-- 长事务或多步操作串联调用的连贯性保证。
+- 需要在一段代码内复用同一组服务/工具路由。
+- 多步操作中希望限制工具集合，避免每次调用都显式传 service。
 - Agent 场景中将不同任务隔离在不同会话内并行执行。
 
 
@@ -151,4 +152,3 @@ AgentExecutor(agent=agent, tools=tools).invoke({"input": "打开百度并截图"
 - 工具使用总览: `tools/overview.md`
 - 服务管理总览: `services/overview.md`
 - 设计来源与完整方案：项目根目录《会话重构计划.md`
-
