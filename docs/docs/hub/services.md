@@ -1,6 +1,6 @@
 # 聚合服务（hub_*）
 
-将当前 Store/Agent 再暴露为 MCP 服务，作为 Hub 供外部调用（HTTP / SSE / stdio），用于把已注册的工具统一对外输出。
+将当前 Store/Agent 再暴露为 MCP 服务，作为 Hub 供外部调用（HTTP / stdio），用于把已注册的工具统一对外输出。
 
 ## 概念与前置
 - Hub：把 Store/Agent 封装成一个 MCP 端点，外部按 MCP 客户端方式连接。
@@ -11,11 +11,12 @@
 | 场景 | 标准用法 | 返回值 | 说明 |
 | ---- | -------- | ------ | ---- |
 | HTTP Hub | `store.for_store().hub_http(port=8000, host="0.0.0.0", path="/mcp", block=False)` | 服务器对象或句柄 | 启动 HTTP 端点（默认非阻塞） |
-| SSE Hub | `store.for_store().hub_sse(port=8000, host="0.0.0.0", path="/mcp", block=False)` | 服务器对象或句柄 | 启动 SSE 端点 |
 | stdio Hub | `store.for_store().hub_stdio()` | None | 以 stdio 方式暴露（通常在嵌入式场景） |
 | Agent 视角 | `store.for_agent("agentA").hub_http(...)` | 同上 | 仅暴露该 Agent 的服务集合 |
 
-## 参数说明（HTTP/SSE）
+`hub_sse()` 在当前 Rust `mcp-server` 后端中不支持。请使用 `hub_http()` 暴露 streamable-http；不要把 SSE 伪装成 streamable-http。
+
+## 参数说明（HTTP）
 | 参数 | 类型 | 必填 | 说明 | 默认值 |
 | ---- | ---- | ---- | ---- | ---- |
 | `port` | int | 否 | 监听端口 | `8000` |
@@ -46,7 +47,7 @@ print("Agent Hub 已启动:", hub)
 ```
 
 ## 返回值
-- HTTP/SSE：返回服务器对象或控制句柄（实现细节依赖内部服务端实现），若 `block=True` 则阻塞直至退出。
+- HTTP：返回服务器对象或控制句柄（实现细节依赖内部服务端实现），若 `block=True` 则阻塞直至退出。
 - stdio：无返回值，直接在标准输入输出暴露。
 
 ## 相关与下一步

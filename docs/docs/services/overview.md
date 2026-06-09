@@ -10,7 +10,7 @@
 - 如果你要**删除服务**（移除注册与工具），请看 [删除服务](delete-service.md)。
 - 如果你要**检查服务健康状态**，请看 [健康检查](check-health.md)。
 - 如果你要**查看当前配置快照**（服务/Agent/客户端映射），请看 [配置显示](show-config.md)。
-- 如果你要**把服务集合对外暴露成 Hub**（HTTP/SSE/stdio），请看 [聚合服务](../hub/services.md)。
+- 如果你要**把服务集合对外暴露成 Hub**（HTTP/stdio），请看 [聚合服务](../hub/services.md)。
 - 如果你要**通过代理对象操作服务**（ServiceProxy 视角），请看 [ServiceProxy](service-proxy.md)。
 - 如果你要**等待服务就绪或检查状态**，请结合 [重启服务](restart-service.md) 与 [健康检查](check-health.md) 里的等待/检查逻辑。
 
