@@ -26,6 +26,7 @@
 - 要求：必须至少包含 `url` 或 `command` 字段。
 - 作用：定义服务端点（HTTP/SSE）或本地启动方式，以及认证、超时等配置信息。
 - 认证：`headers` 中可放置 `Authorization`/`X-API-Key` 等；`token/api_key/auth` 会被标准化为 headers。
+- 字符串配置会先在 Python SDK 中解析为 dict，再通过 PyO3 传入 Rust core。
 
 | 场景 | 最小配置示例 |
 | ---- | ------------ |

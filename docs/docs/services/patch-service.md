@@ -21,6 +21,8 @@
 | `name` | str | 是 | 服务名称 | `"weather"` |
 | `patch` | dict / str | 是 | 需修改的字段；字符串需为 JSON | `{"headers": {"Authorization": "Bearer xxx"}}` |
 
+字符串配置会先在 Python SDK 中解析为 dict，再通过 PyO3 传入 Rust core。
+
 ## 标准使用
 ```python
 from mcpstore import MCPStore
