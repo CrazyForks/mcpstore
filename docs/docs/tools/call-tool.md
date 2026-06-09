@@ -18,7 +18,7 @@ MCPStore 推荐的工具调用方法，兼容 MCPStore 命名与能力，支持�
 | 参数名             | 类型                    | 说明 |
 |--------------------|-------------------------|------|
 | `tool_name`        | str                     | 工具名称，支持多种格式（见“工具名称解析”）。 |
-| `args`             | dict 或 str             | 工具参数；同步版本支持字典或 JSON 字符串；异步版本使用字典。 |
+| `args`             | dict                    | 工具参数；同步和异步版本都使用 Python 字典。 |
 | `return_extracted` | bool                    | 是否提取返回数据；True 返回提取后的数据，False 返回完整结果对象。 |
 | `timeout`          | float                   | 超时时间（秒），通过 `**kwargs` 传入。 |
 | `progress_handler` | Callable[[Any], None]   | 进度回调，通过 `**kwargs` 传入。 |
@@ -71,10 +71,9 @@ print("天气查询结果:", result)
 result = store.for_store().call_tool("system_info_get_time")
 print("系统时间:", result)
 
-# 使用 JSON 字符串参数（同步版本支持）
 result = store.for_store().call_tool(
     "maps-api_search_location",
-    '{"query": "天安门", "limit": 5}'
+    {"query": "天安门", "limit": 5}
 )
 print("地点搜索结果:", result)
 ```
@@ -348,8 +347,7 @@ print("平均耗时(秒):", f"{(total_duration / len(results)):.2f}")
 ### 注意事项
 
 - 名称解析：在 Agent 模式下支持本地名称，系统自动映射为全局名称。
-- 参数约束：异步版本 `args` 使用字典；同步版本支持字典或 JSON 字符串。
+- 参数约束：`args` 使用 Python 字典；PyO3 绑定会把字典转入 Rust core，不需要先序列化为 JSON 字符串。
 - 错误处理：`raise_on_error=False` 时不抛异常，请检查返回对象中的错误字段。
 - 性能：密集调用建议设置 `timeout` 并采用异步并发以提升吞吐。
 - 会话：在需要上下文粘性的场景可传入 `session_id`。
-
