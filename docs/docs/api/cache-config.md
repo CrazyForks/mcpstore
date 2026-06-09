@@ -1,14 +1,14 @@
 # 缓存配置 API
 
-本文档描述 MCPStore 基于 py-key-value 的缓存配置 API。
+本文档描述 Rust-backed MCPStore 的缓存配置 API。
 
 ## 概述
 
-MCPStore 使用 [py-key-value](https://github.com/parnell/py-key-value) 作为统一的缓存抽象层，支持：
+MCPStore 通过 Rust core 管理缓存后端，Python SDK 负责传入显式配置对象，支持：
 
 - **多种存储后端**：Memory、Redis
-- **企业级包装器**：统计、大小限制、压缩
-- **灵活工作模式**：本地、混合、共享
+- **运行快照检查**：通过 Rust cache inspect 查看缓存实体、关系、状态与事件数量
+- **源模式选择**：本地配置文件或共享 Rust DB source mode
 - **运行时热插拔**：动态切换缓存后端
 
 ---
@@ -29,35 +29,36 @@ store = MCPStore.setup_store(
 ### Redis 后端配置
 
 ```python
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(
+    url="redis://localhost:6379/0",
+    password="your_password",  # 可选
+    namespace="mcpstore_prod",
+)
+
 # 混合模式（JSON + Redis）
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            "password": "your_password",  # 可选
-            "namespace": "mcpstore_prod"
-        }
-    }
+    cache=redis_config,
 )
 ```
 
 ### 共享模式配置
 
 ```python
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(
+    url="redis://localhost:6379/0",
+    namespace="team_workspace",
+)
+
 # 共享模式（Redis Only）
 store = MCPStore.setup_store(
     mcpjson_path=None,
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            "namespace": "team_workspace",
-            "mode": "shared",
-            "load_from_cache": True
-        }
-    }
+    cache=redis_config,
+    cache_mode="shared",
 )
 ```
 
@@ -70,14 +71,13 @@ store = MCPStore.setup_store(
 Rust-backed Python SDK 当前通过 Rust cache inspect 暴露缓存快照计数。它不会伪造请求命中率、请求数或延迟指标；这些字段在返回值中会标记为不可用。
 
 ```python
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(url="redis://localhost:6379/0")
+
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-        }
-    }
+    cache=redis_config,
 )
 
 # 获取 Rust cache inspect 统计
@@ -91,13 +91,12 @@ print(f"请求指标可用: {stats['request_metrics_available']}")
 
 ### 当前支持的配置字段
 
-Python SDK 会把 `external_db.cache` 解析成 Rust cache backend 配置，再通过 PyO3 初始化 Rust core。当前不会启用旧 Python wrapper；未列出的字段不会产生额外行为。
+Python SDK 通过 `cache=MemoryConfig(...)` / `cache=RedisConfig(...)` 把显式配置对象传给 Rust-backed store。当前不会启用旧 Python wrapper；未列出的字段不会产生额外行为。
 
 **配置项**：
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `type` | `str` | `"memory"` | `memory` / `redis` / `openkeyv_memory` / `openkeyv_redis` |
 | `url` | `str` | `None` | Redis URL；Redis 后端推荐显式提供 |
 | `host` | `str` | `None` | 未提供 URL 时用于拼接 Redis 地址 |
 | `port` | `int` | `None` | 未提供 URL 时用于拼接 Redis 地址 |
@@ -119,20 +118,21 @@ Python SDK 会把 `external_db.cache` 解析成 Rust cache backend 配置，再�
 ### 组合配置
 
 ```python
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(
+    url="redis://localhost:6379/0",
+    namespace="mcpstore_prod",
+    max_connections=50,
+    socket_timeout=2.0,
+    socket_connect_timeout=2.0,
+    health_check_interval=30,
+    retry_attempts=3,
+)
+
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            "namespace": "mcpstore_prod",
-            "max_connections": 50,
-            "socket_timeout": 2.0,
-            "socket_connect_timeout": 2.0,
-            "health_check_interval": 30,
-            "retry_attempts": 3,
-        }
-    }
+    cache=redis_config,
 )
 ```
 
@@ -143,21 +143,18 @@ store = MCPStore.setup_store(
 ### 基础连接参数
 
 ```python
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(
+    url="redis://localhost:6379/0",
+    password="your_password",
+    socket_timeout=2.0,
+    socket_connect_timeout=2.0,
+)
+
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            
-            # 基础连接
-            "url": "redis://localhost:6379/0",
-            "password": "your_password",
-            
-            # 超时配置
-            "socket_timeout": 2.0,
-            "socket_connect_timeout": 2.0
-        }
-    }
+    cache=redis_config,
 )
 ```
 
@@ -173,18 +170,17 @@ store = MCPStore.setup_store(
 ### 连接池配置
 
 ```python
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(
+    url="redis://localhost:6379/0",
+    max_connections=50,
+    health_check_interval=30,
+)
+
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            
-            # 连接池配置
-            "max_connections": 50,
-            "health_check_interval": 30
-        }
-    }
+    cache=redis_config,
 )
 ```
 
@@ -200,28 +196,20 @@ store = MCPStore.setup_store(
 使用命名空间隔离不同应用的数据：
 
 ```python
+from mcpstore.config import RedisConfig
+
 # 应用 A
+redis_a = RedisConfig(url="redis://localhost:6379/0", namespace="app_a")
 store_a = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            "namespace": "app_a"  # 独立命名空间
-        }
-    }
+    cache=redis_a,
 )
 
 # 应用 B
+redis_b = RedisConfig(url="redis://localhost:6379/0", namespace="app_b")
 store_b = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "redis",
-            "url": "redis://localhost:6379/0",
-            "namespace": "app_b"  # 独立命名空间
-        }
-    }
+    cache=redis_b,
 )
 ```
 
@@ -229,25 +217,29 @@ store_b = MCPStore.setup_store(
 
 ## 工作模式配置
 
-### 自动模式检测
+### 默认模式
 
 ```python
-# 自动检测工作模式
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(url="redis://localhost:6379/0")
+
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",  # 可选
-    external_db={...},           # 可选
+    cache=redis_config,          # 可选
     cache_mode="auto"            # 默认
 )
 ```
 
-**检测逻辑**：
-- 无 JSON + Redis → 共享模式
-- 有 JSON + Redis → 混合模式
-- 有 JSON + 无 Redis → 本地模式
+`cache_mode="auto"` 使用 Rust 默认本地 source mode；不会再执行旧 Python cache wrapper 的自动模式推断。需要只使用共享 Rust DB source mode 时，显式传 `cache_mode="shared"` 或 `only_db=True`。
 
 ### 显式指定模式
 
 ```python
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(url="redis://localhost:6379/0")
+
 # 显式指定本地模式
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
@@ -257,17 +249,19 @@ store = MCPStore.setup_store(
 # 显式指定混合模式
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={"cache": {"type": "redis", ...}},
+    cache=redis_config,
     cache_mode="hybrid"
 )
 
 # 显式指定共享模式
 store = MCPStore.setup_store(
     mcpjson_path=None,
-    external_db={"cache": {"type": "redis", "mode": "shared", ...}},
+    cache=redis_config,
     cache_mode="shared"
 )
 ```
+
+`hybrid` 当前保留为显式模式值，但不会恢复旧 Python wrapper 的混合读写逻辑；Rust source mode 仍由 `shared`/`only_db` 决定。
 
 ---
 
@@ -318,12 +312,13 @@ await store.registry.switch_backend(redis_config)
 ### 切换到内存
 
 ```python
-from mcpstore.config import MemoryConfig
+from mcpstore.config import MemoryConfig, RedisConfig
 
 # 初始使用 Redis
+redis_config = RedisConfig(url="redis://localhost:6379/0")
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={"cache": {"type": "redis", ...}}
+    cache=redis_config,
 )
 
 # 切换到 Rust memory backend
@@ -403,25 +398,25 @@ except NotImplementedError:
 ### 生产环境配置
 
 ```python
+import os
+
+from mcpstore.config import RedisConfig
+
+redis_config = RedisConfig(
+    url="redis://prod-redis:6379/0",
+    password=os.getenv("REDIS_PASSWORD"),
+    namespace="mcpstore_prod",
+    socket_timeout=2.0,
+    socket_connect_timeout=2.0,
+    max_connections=50,
+    health_check_interval=30,
+    retry_attempts=3,
+    health_check=True,
+)
+
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            # 存储后端
-            "type": "redis",
-            "url": "redis://prod-redis:6379/0",
-            "password": os.getenv("REDIS_PASSWORD"),
-            "namespace": "mcpstore_prod",
-            
-            # 连接配置
-            "socket_timeout": 2.0,
-            "socket_connect_timeout": 2.0,
-            "max_connections": 50,
-            "health_check_interval": 30,
-            "retry_attempts": 3,
-            "health_check": True
-        }
-    },
+    cache=redis_config,
     cache_mode="hybrid"
 )
 ```
@@ -429,16 +424,17 @@ store = MCPStore.setup_store(
 ### 开发环境配置
 
 ```python
+from mcpstore.config import MemoryConfig
+
+memory_config = MemoryConfig(
+    timeout=2.0,
+    retry_attempts=1,
+    health_check=True,
+)
+
 store = MCPStore.setup_store(
     mcpjson_path="./mcp.json",
-    external_db={
-        "cache": {
-            "type": "memory",
-            "timeout": 2.0,
-            "retry_attempts": 1,
-            "health_check": True
-        }
-    },
+    cache=memory_config,
     cache_mode="local"
 )
 ```
@@ -450,14 +446,12 @@ store = MCPStore.setup_store(
 ### Redis 连接失败
 
 ```python
+from mcpstore.config import RedisConfig
+
 try:
+    config = RedisConfig(url="redis://invalid:6379/0")
     store = MCPStore.setup_store(
-        external_db={
-            "cache": {
-                "type": "redis",
-                "url": "redis://invalid:6379/0"
-            }
-        }
+        cache=config,
     )
 except RuntimeError as e:
     print(f"Redis 连接失败: {e}")

@@ -298,7 +298,6 @@ def setup_store(
     mcpjson_path: str | None = None,
     debug: bool | str = False,
     cache: MemoryConfig | RedisConfig | None = None,
-    external_db: dict | None = None,
     static_config: dict | None = None,
     cache_mode: str = "auto",
     only_db: bool = False,
@@ -311,7 +310,6 @@ def setup_store(
         mcpjson_path: Path to MCP JSON configuration file (optional)
         debug: Enable debug logging
         cache: Cache configuration object
-        external_db: Dict cache configuration alias
         static_config: Service config added after setup through Rust facade
         cache_mode: auto/local/hybrid/shared
         only_db: Use Rust db source mode
@@ -332,7 +330,6 @@ def setup_store(
 | `mcpjson_path` | `Optional[Union[str, Path]]` | `None` | JSON configuration file path |
 | `debug` | `bool | str` | `False` | Enable debug logging |
 | `cache` | `Optional[Union[MemoryConfig, RedisConfig]]` | `None` | Cache configuration |
-| `external_db` | `dict | None` | `None` | Dict cache configuration alias |
 | `static_config` | `dict | None` | `None` | Service config added through Rust facade after setup |
 | `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `hybrid`, `shared` |
 | `only_db` | `bool` | `False` | Use Rust db source mode |
