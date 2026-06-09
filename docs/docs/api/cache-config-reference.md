@@ -365,47 +365,25 @@ ns = get_namespace(config)  # Returns: "production"
 
 ### create_kv_store()
 
-Create a py-key-value store from configuration.
+Removed. MCPStore no longer creates Python-side cache stores.
 
 ```python
-from key_value.aio.stores import MemoryStore, RedisStore
-
-def create_kv_store(
-    cache_config: Union[MemoryConfig, RedisConfig]
-) -> Union[MemoryStore, RedisStore]:
-    """
-    Create py-key-value store from configuration.
-    
-    Args:
-        cache_config: Cache configuration object
-    
-    Returns:
-        MemoryStore or RedisStore instance
-    
-    Raises:
-        ValueError: If configuration is invalid
-    """
-```
-
-**Examples**:
-
-```python
-from mcpstore.config import MemoryConfig, RedisConfig
 from mcpstore.config.factory import create_kv_store
 
-# Create memory store
-memory_config = MemoryConfig()
-store = create_kv_store(memory_config)  # Returns MemoryStore
+create_kv_store(...)  # raises RuntimeError
+```
 
-# Create Redis store from URL
-redis_config = RedisConfig(url="redis://localhost:6379/0")
-store = create_kv_store(redis_config)  # Returns RedisStore
+Use the Rust-backed cache facade instead:
 
-# Create Redis store from client
-from redis.asyncio import Redis
-redis_client = Redis(host="localhost", port=6379)
-redis_config = RedisConfig(client=redis_client)
-store = create_kv_store(redis_config)  # Returns RedisStore with existing client
+```python
+from mcpstore import MCPStore
+from mcpstore.config import MemoryConfig
+
+store = MCPStore.setup_store(cache=MemoryConfig())
+cache = store.for_store().find_cache()
+
+health = cache.health_check()
+snapshot = cache.inspect()
 ```
 
 ---
