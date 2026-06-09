@@ -34,7 +34,7 @@ tools = agent_ctx.list_tools()
 ```python
 svc = store.for_store().find_service("weather")
 info = svc.service_info()
-svc.patch_config({"timeout": 30})
+svc.patch_service({"timeout": 30})
 svc.restart_service()
 ```
 
