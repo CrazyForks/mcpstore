@@ -301,7 +301,6 @@ def setup_store(
     static_config: dict | None = None,
     cache_mode: str = "auto",
     only_db: bool = False,
-    **kwargs,
 ) -> "MCPStore":
     """
     Create a Rust-backed MCPStore instance.

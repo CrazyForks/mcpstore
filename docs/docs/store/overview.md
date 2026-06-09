@@ -10,8 +10,8 @@
 ## 入口函数
 | 方法 | 场景 | 返回值 | 说明 |
 | ---- | ---- | ------ | ---- |
-| `MCPStore.setup_store(**kwargs)` | 同步初始化 | `MCPStore` | 创建默认配置的 Store，并返回可链式调用的上下文 |
-| `await MCPStore.setup_store_async(**kwargs)` | 异步初始化 | `MCPStore` | 在异步环境中初始化，避免事件循环冲突 |
+| `MCPStore.setup_store(...)` | 同步初始化 | `MCPStore` | 创建默认配置的 Store，并返回可链式调用的上下文 |
+| `await MCPStore.setup_store_async(...)` | 异步初始化 | `MCPStore` | 在异步环境中初始化，避免事件循环冲突 |
 
 > 返回的 `MCPStore` 支持 `for_store()` / `for_agent(agent_id)` 获取上下文代理，进而调用服务、工具、Hub、配置等功能。
 

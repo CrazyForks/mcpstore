@@ -20,12 +20,12 @@
 | ---- | ---- | ---- | ---- | ---- |
 | `config` | dict / list | 是（与 json_file 二选一） | 服务配置；支持单个、批量、mcpServers、宽字典 | 见下方示例 |
 | `json_file` | str | 否 | 从 JSON 文件读取配置；若同时提供 `config`，以文件为准 | `/path/to/mcp.json` |
-| `headers` | dict | 否 | 认证请求头，最终写入配置；`token/api_key/auth` 会被标准化为 headers | `{"Authorization": "Bearer <token>"}` |
+| `headers` | dict | 否 | 认证请求头，最终写入配置 | `{"Authorization": "Bearer <token>"}` |
 
 ## config 参数说明
 - 类型：dict / list。Python SDK 通过 PyO3 传递原生对象，不接受 JSON 字符串作为配置对象。
 - 作用：描述要注册的服务集合，支持单个、批量、mcpServers 兼容格式、宽字典等。
-- 认证：`token/api_key/auth` 会被标准化为 `headers` 并随配置保存。
+- 认证：请使用 `headers`，例如 `{"Authorization": "Bearer <token>"}`。
 
 | 场景 | 最小配置示例 |
 | ---- | ------------ |
@@ -85,7 +85,6 @@ print([s.name for s in agent_services])  # 期望包含 "local_calc"
 - 连接与健康状态需通过 `wait_service` 或 `check_health`（见本目录的其他页面）确认。
 
 ## 相关与下一步
-- 鉴权配置：`../auth/headers.md`（例如 token/api_key/header 规范）
 - 查询当前服务列表：`list-services.md`
 - 更新配置：`update-service.md`
 - 重启或删除：`restart-service.md`、`delete-service.md`
@@ -97,4 +96,4 @@ print([s.name for s in agent_services])  # 期望包含 "local_calc"
 - 配置是 JSON 字符串怎么办？
   请先在调用方解析为 dict/list，或使用 `json_file` 让 SDK 从配置文件读取。
 - headers 和 token 的关系？  
-  `token/api_key/auth` 会被统一写入 headers，最终以 headers 形式落盘和请求。
+  token 应由调用方写入 `headers`，例如 `{"Authorization": "Bearer <token>"}`；Python SDK 不再接受独立的 `token`/`api_key`/`auth` 配置别名。

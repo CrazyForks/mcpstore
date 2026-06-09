@@ -5,7 +5,7 @@
 ## 概念与前置
 - Store：全局视角，`for_store()` 更新全局服务。
 - Agent：分组视角，`for_agent(agent_id)` 仅更新该分组服务。
-- 适用场景：小范围调整（如 headers、timeout、env），避免全量覆盖风险。
+- 适用场景：小范围调整（如 headers、env、description），避免全量覆盖风险。
 - 必须前置：已通过 `MCPStore.setup_store()` 初始化，目标服务已存在。
 
 ## 主要方法
@@ -31,7 +31,7 @@ store = MCPStore.setup_store()
 
 patch = {
     "headers": {"Authorization": "Bearer new-token"},
-    "timeout": 45
+    "description": "patched weather service"
 }
 ok = store.for_store().patch_service("weather", patch)
 print("补丁更新结果:", ok)
