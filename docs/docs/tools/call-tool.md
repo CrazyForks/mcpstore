@@ -42,7 +42,7 @@ MCPStore 推荐的工具调用方法，兼容 MCPStore 命名与能力，支持�
 支持的格式：
 - 直接工具名：`"get_weather"`
 - 服务前缀格式：`"weather-api_get_weather"`
-- 旧格式兼容：`"weather-api.get_weather"`
+- 点分隔服务前缀格式：`"weather-api.get_weather"`
 - Agent 本地格式：在 Agent 模式下使用本地服务名视角
 
 解析优先级：
@@ -352,5 +352,4 @@ print("平均耗时(秒):", f"{(total_duration / len(results)):.2f}")
 - 错误处理：`raise_on_error=False` 时不抛异常，请检查返回对象中的错误字段。
 - 性能：密集调用建议设置 `timeout` 并采用异步并发以提升吞吐。
 - 会话：在需要上下文粘性的场景可传入 `session_id`。
-
 
