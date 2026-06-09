@@ -18,12 +18,12 @@
 ## 参数说明
 | 参数 | 类型 | 必填 | 说明 | 示例 |
 | ---- | ---- | ---- | ---- | ---- |
-| `config` | dict / list / str | 是（与 json_file 二选一） | 服务配置；支持单个、批量、mcpServers、宽字典；字符串时需为 JSON | 见下方示例 |
+| `config` | dict / list | 是（与 json_file 二选一） | 服务配置；支持单个、批量、mcpServers、宽字典 | 见下方示例 |
 | `json_file` | str | 否 | 从 JSON 文件读取配置；若同时提供 `config`，以文件为准 | `/path/to/mcp.json` |
 | `headers` | dict | 否 | 认证请求头，最终写入配置；`token/api_key/auth` 会被标准化为 headers | `{"Authorization": "Bearer <token>"}` |
 
 ## config 参数说明
-- 类型：dict / list / str（字符串需为 JSON，等价于 dict 或 list）。
+- 类型：dict / list。Python SDK 通过 PyO3 传递原生对象，不接受 JSON 字符串作为配置对象。
 - 作用：描述要注册的服务集合，支持单个、批量、mcpServers 兼容格式、宽字典等。
 - 认证：`token/api_key/auth` 会被标准化为 `headers` 并随配置保存。
 
@@ -94,7 +94,7 @@ print([s.name for s in agent_services])  # 期望包含 "local_calc"
 ## 常见问题
 - 为什么添加后立即调用工具报“未就绪”？  
   add_service 只登记并触发初始化，请先等待服务健康状态正常再调用工具。
-- 配置是字符串怎么办？  
-  提供 JSON 字符串即可，内部会解析；非法 JSON 会抛异常。
+- 配置是 JSON 字符串怎么办？
+  请先在调用方解析为 dict/list，或使用 `json_file` 让 SDK 从配置文件读取。
 - headers 和 token 的关系？  
   `token/api_key/auth` 会被统一写入 headers，最终以 headers 形式落盘和请求。

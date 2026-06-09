@@ -19,9 +19,9 @@
 | 参数 | 类型 | 必填 | 说明 | 示例 |
 | ---- | ---- | ---- | ---- | ---- |
 | `name` | str | 是 | 服务名称 | `"weather"` |
-| `patch` | dict / str | 是 | 需修改的字段；字符串需为 JSON | `{"headers": {"Authorization": "Bearer xxx"}}` |
+| `patch` | dict | 是 | 需修改的字段 | `{"headers": {"Authorization": "Bearer xxx"}}` |
 
-字符串配置会先在 Python SDK 中解析为 dict，再通过 PyO3 传入 Rust core。
+Python SDK 通过 PyO3 传递原生 dict，不接受 JSON 字符串作为补丁对象。
 
 ## 标准使用
 ```python

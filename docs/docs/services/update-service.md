@@ -21,14 +21,13 @@
 | 参数 | 类型 | 必填 | 说明 | 示例 |
 | ---- | ---- | ---- | ---- | ---- |
 | `name` | str | 是 | 服务名称 | `"weather"` |
-| `config` | dict / str | 是 | 要更新的配置字段；字符串时需为 JSON | 见下方示例 |
+| `config` | dict | 是 | 要更新的配置字段 | 见下方示例 |
 
 ## config 参数说明
-- 类型：dict / JSON 字符串。
+- 类型：dict。Python SDK 通过 PyO3 传递原生对象，不接受 JSON 字符串作为配置对象。
 - 要求：必须至少包含 `url` 或 `command` 字段。
 - 作用：定义服务端点（HTTP/SSE）或本地启动方式，以及认证、超时等配置信息。
 - 认证：`headers` 中可放置 `Authorization`/`X-API-Key` 等；`token/api_key/auth` 会被标准化为 headers。
-- 字符串配置会先在 Python SDK 中解析为 dict，再通过 PyO3 传入 Rust core。
 
 | 场景 | 最小配置示例 |
 | ---- | ------------ |
