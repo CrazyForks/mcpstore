@@ -14,7 +14,6 @@
 | ---- | -------- | ------ | ---- |
 | 全局更新 | `store.for_store().update_service(name, config)` | `bool` | 同步全量更新指定服务配置 |
 | Agent 更新 | `store.for_agent("agentA").update_service(name, config)` | `bool` | 仅更新该 Agent 分组下的服务 |
-| 全量替换别名 | `store.for_store().replace_service_config(name, config)` | `bool` | 与 `update_service` 相同 |
 | 异步形式 | `await store.for_store().update_service_async(name, config)` | `bool` | 异步全量更新 |
 
 ## 参数说明
