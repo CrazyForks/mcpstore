@@ -23,6 +23,7 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - Commit after each large change. Completed commits:
   - `5cc00ed Protect README Python API contract`
   - `08db9aa Use direct PyO3 converters for hot paths`
+  - `3485898 Strengthen PyO3 typed return converters`
 - Keep unrelated untracked report file out of implementation commits.
 
 ## Errors Encountered
@@ -30,4 +31,4 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - Direct conversion for scoped service/tool lists could not be applied immediately because Rust core returns `serde_json::Value` for those methods, not `ServiceEntry` / `ToolDescription`.
 
 ## Status
-**Currently in Phase 5** - Verification passed for the second direct converter batch; preparing the next commit.
+**Currently after Phase 5** - Second direct converter batch is verified and committed; next step is selecting whether to type scoped/config/cache paths or reduce Python facade overhead.
