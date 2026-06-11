@@ -34,6 +34,7 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - Perspective binding now has direct PyO3 converters; the generic `to_py_object` helper and unused object-or-empty helper were removed.
 - Scoped service health/status reads should use typed Rust core siblings for the PyO3 path while preserving existing JSON-returning Rust methods for other callers.
 - Fixed-shape reports such as event capability and cache health should expose typed Rust core siblings for PyO3, with JSON wrappers retained for Rust callers.
+- `show_config` should use a typed `McpConfig` core sibling for PyO3; keep single-service config dynamic to avoid dropping user-defined fields.
 - Keep unrelated untracked report file out of implementation commits.
 
 ## Errors Encountered
@@ -42,4 +43,4 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - `cargo fmt` and `maturin develop` from the repository root failed because the Rust workspace/binding manifests are under `rust/`; use `cargo fmt --manifest-path rust/Cargo.toml --all` and `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`.
 
 ## Status
-**Currently after Phase 5** - PyO3 binding no longer uses the generic `to_py_object` path; Python public entry now has an explicit `MCPStore` facade, and stable report/status reads use typed Rust core paths.
+**Currently after Phase 5** - PyO3 binding no longer uses the generic `to_py_object` path; Python public entry now has an explicit `MCPStore` facade, and stable config/report/status reads use typed Rust core paths.

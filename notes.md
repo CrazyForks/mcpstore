@@ -124,3 +124,11 @@
 - Direct PyO3 converters build the Python dict/list shape without a `serde_json::Value` intermediate for these fixed-shape reports.
 - Verification kept to compile check per current direction:
   - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
+
+### Config Typed Batch
+- Added `show_config_entry(...) -> McpConfig` as the typed Rust core sibling for `show_config`.
+- Existing `show_config` remains as a JSON-returning wrapper for Rust callers.
+- PyO3 binding now converts `McpConfig` and nested `ServerConfig` directly to Python dicts.
+- `get_service_config` remains dynamic because individual service configs can carry user-defined fields that a strict `ServerConfig` converter would drop.
+- Verification kept to compile check per current direction:
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
