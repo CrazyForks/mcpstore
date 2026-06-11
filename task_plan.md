@@ -9,7 +9,7 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - [x] Phase 3: Inventory remaining PyO3 generic conversion paths
 - [x] Phase 4: Convert the next safe high-traffic paths without changing Python API shape
 - [x] Phase 5: Run verification and commit each large change
-- [ ] Phase 6: Produce final progress summary
+- [x] Phase 6: Produce final progress summary
 
 ## Key Questions
 1. Which Python APIs are documented and therefore must remain stable?
@@ -28,6 +28,10 @@ Preserve the documented Python MCPStore API contract while moving the Python run
   - `b3b5050 Use direct serde value PyO3 conversion`
   - `af3a6a5 Use direct PyO3 converters for perspective`
   - `74cc1a6 Update PyO3 refactor progress notes`
+  - `73ebb6e Define public Python MCPStore facade`
+  - `7d169bb Add typed scoped service status paths`
+  - `2f551bf Add typed PyO3 report paths`
+  - `ba1a09f Add typed PyO3 config path`
 - Public Python entry should be `MCPStore`; `RustStoreBackend` remains available as a compatibility/internal name, not the preferred public API identity.
 - Scoped service/tool list bindings must preserve old Python dict shape, including agent-localized service names and scoped tool fields such as `original_name`, `service_name`, and `global_service_name`.
 - `core_store.rs` should use `serde_value_to_py` directly when the Rust core already returns `serde_json::Value`; `to_py_object` is only needed for typed structs that still rely on generic serialization.
@@ -43,4 +47,4 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - `cargo fmt` and `maturin develop` from the repository root failed because the Rust workspace/binding manifests are under `rust/`; use `cargo fmt --manifest-path rust/Cargo.toml --all` and `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`.
 
 ## Status
-**Currently after Phase 5** - PyO3 binding no longer uses the generic `to_py_object` path; Python public entry now has an explicit `MCPStore` facade, and stable config/report/status reads use typed Rust core paths.
+**Complete** - Public Python API shape is preserved, the public Python entry is `MCPStore`, and fixed-shape PyO3 reads now use typed/direct conversion paths. Remaining `serde_json::Value` use is limited to dynamic MCP/user payloads where typed conversion would risk dropping fields.

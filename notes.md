@@ -132,3 +132,15 @@
 - `get_service_config` remains dynamic because individual service configs can carry user-defined fields that a strict `ServerConfig` converter would drop.
 - Verification kept to compile check per current direction:
   - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
+
+### Completion Audit
+- Public API smoke check:
+  - `MCPStore` imports as an explicit public facade class.
+  - `MCPStore` remains a subclass of `RustStoreBackend`, preserving compatibility.
+  - Root entrypoints `setup_store`, `setup_store_async`, `for_store`, and `for_agent` are present.
+  - README chain context methods and adapter chain methods are present on `RustStoreContext`.
+- PyO3 bridge audit:
+  - No old `*_json` bridge methods were found for core binding methods.
+  - No `to_py_object` generic serialize-then-convert path remains.
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python` passes.
+- Remaining `serde_json::Value` use is retained for dynamic MCP/user payloads: schemas, annotations, resources, prompts, cache inspection entries, patch arguments, tool arguments, prompt arguments, and single service configs.
