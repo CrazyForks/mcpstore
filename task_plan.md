@@ -8,7 +8,7 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - [x] Phase 2: Replace first hot-path service/tool returns with direct PyO3 converters
 - [x] Phase 3: Inventory remaining PyO3 generic conversion paths
 - [x] Phase 4: Convert the next safe high-traffic paths without changing Python API shape
-- [ ] Phase 5: Run verification and commit each large change
+- [x] Phase 5: Run verification and commit each large change
 - [ ] Phase 6: Produce final progress summary
 
 ## Key Questions
@@ -24,11 +24,13 @@ Preserve the documented Python MCPStore API contract while moving the Python run
   - `5cc00ed Protect README Python API contract`
   - `08db9aa Use direct PyO3 converters for hot paths`
   - `3485898 Strengthen PyO3 typed return converters`
+- Scoped service/tool list bindings must preserve old Python dict shape, including agent-localized service names and scoped tool fields such as `original_name`, `service_name`, and `global_service_name`.
 - Keep unrelated untracked report file out of implementation commits.
 
 ## Errors Encountered
 - `uv run pytest` failed because `pytest` was not installed; used `python -m unittest` for current Python verification.
 - Direct conversion for scoped service/tool lists could not be applied immediately because Rust core returns `serde_json::Value` for those methods, not `ServiceEntry` / `ToolDescription`.
+- `cargo fmt` and `maturin develop` from the repository root failed because the Rust workspace/binding manifests are under `rust/`; use `cargo fmt --manifest-path rust/Cargo.toml --all` and `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`.
 
 ## Status
-**Currently after Phase 5** - Second direct converter batch is verified and committed; next step is selecting whether to type scoped/config/cache paths or reduce Python facade overhead.
+**Currently after Phase 5** - Scoped service/tool typed PyO3 return paths are implemented and verified; next step is selecting the next remaining `to_py_object` path.

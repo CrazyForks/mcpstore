@@ -31,7 +31,7 @@
 - Convert core return types gradually. Do not force broad Rust core signature changes in the same batch unless tests require it.
 
 ### Current Verified State
-- `cargo check -p mcpstore_python` passes.
+- `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python` passes.
 - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v` passes with 51 tests, 5 FastAPI tests skipped due to missing FastAPI.
 - One existing Rust warning remains: `py_to_serde_object_or_empty` is unused.
 
@@ -50,4 +50,19 @@
 ### Candidate Next Batch
 - Inspect remaining `to_py_object` uses in `core_store.rs`.
 - Prioritize methods with typed Rust return values.
-- Avoid changing scoped methods until Rust core typed return shapes are clarified.
+- Avoid changing resource/prompt/config/cache scoped methods until typed return shapes are clarified.
+
+### Scoped Service/Tool Typed Batch
+- Added typed scoped payloads in Rust core:
+  - `ScopedServiceEntry` preserves service fields plus `tool_count` and optional `global_name`.
+  - `ScopedToolEntry` preserves old scoped tool dict fields: `name`, `original_name`, `description`, `schema`, `input_schema`, `service_name`, `global_service_name`, `service_global_name`, and `global_tool_name`.
+- Kept existing JSON-returning Rust methods (`list_services_scoped`, `list_tools_scoped`) for Rust app/server callers.
+- Python binding now calls typed siblings:
+  - `list_service_entries_scoped`
+  - `list_tool_entries_scoped`
+- Direct PyO3 converters now build scoped service/tool Python dicts without going through generic `to_py_object`.
+- Verification after rebuilding the extension:
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
+  - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
+  - `PYTHONPATH=python/src uv run python -m unittest python.tests.test_readme_api_contract -v`
+  - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v`
