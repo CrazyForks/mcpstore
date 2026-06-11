@@ -24,6 +24,9 @@ Preserve the documented Python MCPStore API contract while moving the Python run
   - `5cc00ed Protect README Python API contract`
   - `08db9aa Use direct PyO3 converters for hot paths`
   - `3485898 Strengthen PyO3 typed return converters`
+  - `7146286 Add typed scoped PyO3 return paths`
+  - `b3b5050 Use direct serde value PyO3 conversion`
+  - `af3a6a5 Use direct PyO3 converters for perspective`
 - Scoped service/tool list bindings must preserve old Python dict shape, including agent-localized service names and scoped tool fields such as `original_name`, `service_name`, and `global_service_name`.
 - `core_store.rs` should use `serde_value_to_py` directly when the Rust core already returns `serde_json::Value`; `to_py_object` is only needed for typed structs that still rely on generic serialization.
 - Perspective binding now has direct PyO3 converters; the generic `to_py_object` helper and unused object-or-empty helper were removed.

@@ -15,7 +15,7 @@
 - Key points:
   - Current binding already uses native PyO3 methods, not old `*_json` string methods.
   - `add_service`, `patch_service`, and `call_tool` accept Python objects and convert them to Rust values.
-  - Generic conversion still exists through `to_py_object` and `serde_value_to_py`.
+  - JSON value conversion still exists through `serde_value_to_py`; the generic serialize-then-convert `to_py_object` path has been removed.
   - First direct converters were added for `ServiceEntry`, `ToolInfo`, and `ToolDescription`.
 
 ## Synthesized Findings
@@ -33,7 +33,7 @@
 ### Current Verified State
 - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python` passes.
 - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v` passes with 51 tests, 5 FastAPI tests skipped due to missing FastAPI.
-- One existing Rust warning remains: `py_to_serde_object_or_empty` is unused.
+- The previous Rust dead-code warning for `py_to_serde_object_or_empty` is gone.
 
 ### Second Direct Converter Batch
 - Converted additional strongly typed binding returns to direct PyO3 dict/list construction:
@@ -43,14 +43,14 @@
   - `wait_service_ready`: `ServiceStatus` and nested `ToolStatusItem`
 - Kept generic conversion for config/cache/resource/prompt/scoped value paths where Rust core currently returns `serde_json::Value`.
 - Verification after rebuilding the extension:
-  - `cargo check -p mcpstore_python`
-  - `uv run --with maturin maturin develop`
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
+  - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
   - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v`
 
 ### Candidate Next Batch
-- Inspect remaining `to_py_object` uses in `core_store.rs`.
-- Prioritize methods with typed Rust return values.
-- Avoid changing resource/prompt/config/cache scoped methods until typed return shapes are clarified.
+- No `to_py_object` usages remain in the PyO3 binding.
+- Next meaningful performance work is deeper typed Rust core return shapes for resource/prompt/config/cache methods that currently model dynamic MCP payloads as `serde_json::Value`.
+- Keep those deeper changes conservative because resource and prompt payload shapes are protocol-driven and more dynamic than service/tool metadata.
 
 ### Scoped Service/Tool Typed Batch
 - Added typed scoped payloads in Rust core:
@@ -71,7 +71,7 @@
 - Removed `to_py_object` from `core_store.rs`.
 - For core methods that already return `serde_json::Value` or `Vec<serde_json::Value>`, the PyO3 binding now calls `serde_value_to_py` directly instead of serializing again through `serde_json::to_value`.
 - Covered methods include event capability report, service config, agents, scoped health/status/resources/prompts, config, and cache inspection surfaces.
-- Remaining `to_py_object` usage is outside `core_store.rs`, in the perspective binding, where Rust returns typed structs.
+- No `to_py_object` usage remains after the perspective cleanup batch.
 - Verification:
   - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
   - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
