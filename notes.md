@@ -97,3 +97,16 @@
 - Verification kept lightweight per current direction:
   - `uv run python -m py_compile python/src/mcpstore/core/store/__init__.py python/src/mcpstore/core/store/setup_manager.py python/src/mcpstore/core/store/rust_backend.py`
   - Import smoke check confirmed `MCPStore.__name__ == "MCPStore"`, `issubclass(MCPStore, RustStoreBackend)`, and both setup entrypoints are callable.
+
+### Scoped Health/Status Typed Batch
+- Added typed Rust core siblings:
+  - `service_status_entry_scoped(...) -> ServiceStatus`
+  - `check_service_health_scoped(...) -> Vec<ScopedServiceHealth>`
+- Existing JSON-returning Rust methods remain as wrappers:
+  - `service_status_scoped`
+  - `check_services_scoped`
+- PyO3 binding now calls the typed siblings and uses direct converters:
+  - `service_status_scoped` returns through `service_status_to_py`
+  - `check_services_scoped` builds the service-name-to-health dict directly
+- Verification kept to compile check per current direction:
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
