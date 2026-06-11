@@ -27,6 +27,8 @@ Preserve the documented Python MCPStore API contract while moving the Python run
   - `7146286 Add typed scoped PyO3 return paths`
   - `b3b5050 Use direct serde value PyO3 conversion`
   - `af3a6a5 Use direct PyO3 converters for perspective`
+  - `74cc1a6 Update PyO3 refactor progress notes`
+- Public Python entry should be `MCPStore`; `RustStoreBackend` remains available as a compatibility/internal name, not the preferred public API identity.
 - Scoped service/tool list bindings must preserve old Python dict shape, including agent-localized service names and scoped tool fields such as `original_name`, `service_name`, and `global_service_name`.
 - `core_store.rs` should use `serde_value_to_py` directly when the Rust core already returns `serde_json::Value`; `to_py_object` is only needed for typed structs that still rely on generic serialization.
 - Perspective binding now has direct PyO3 converters; the generic `to_py_object` helper and unused object-or-empty helper were removed.
@@ -38,4 +40,4 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - `cargo fmt` and `maturin develop` from the repository root failed because the Rust workspace/binding manifests are under `rust/`; use `cargo fmt --manifest-path rust/Cargo.toml --all` and `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`.
 
 ## Status
-**Currently after Phase 5** - PyO3 binding no longer uses the generic `to_py_object` path; next work should focus on deeper typed Rust core return shapes for resources/prompts/config/cache if needed.
+**Currently after Phase 5** - PyO3 binding no longer uses the generic `to_py_object` path; Python public entry now has an explicit `MCPStore` facade while keeping `RustStoreBackend` compatibility.

@@ -88,3 +88,12 @@
   - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
   - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
   - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v`
+
+### Public Python MCPStore Entry Batch
+- Added an explicit `MCPStore` class in `python/src/mcpstore/core/store/rust_backend.py` that subclasses `RustStoreBackend`.
+- `mcpstore.core.store.MCPStore` now imports this public facade class instead of aliasing `RustStoreBackend`.
+- `StoreSetupManager` now constructs `MCPStore.setup(...)`, so `MCPStore.setup_store(...)` returns the public facade type.
+- `RustStoreBackend` remains available and still receives `setup_store` / `setup_store_async` for compatibility.
+- Verification kept lightweight per current direction:
+  - `uv run python -m py_compile python/src/mcpstore/core/store/__init__.py python/src/mcpstore/core/store/setup_manager.py python/src/mcpstore/core/store/rust_backend.py`
+  - Import smoke check confirmed `MCPStore.__name__ == "MCPStore"`, `issubclass(MCPStore, RustStoreBackend)`, and both setup entrypoints are callable.
