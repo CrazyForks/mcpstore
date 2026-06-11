@@ -66,3 +66,13 @@
   - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
   - `PYTHONPATH=python/src uv run python -m unittest python.tests.test_readme_api_contract -v`
   - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v`
+
+### Direct serde_json::Value Conversion Batch
+- Removed `to_py_object` from `core_store.rs`.
+- For core methods that already return `serde_json::Value` or `Vec<serde_json::Value>`, the PyO3 binding now calls `serde_value_to_py` directly instead of serializing again through `serde_json::to_value`.
+- Covered methods include event capability report, service config, agents, scoped health/status/resources/prompts, config, and cache inspection surfaces.
+- Remaining `to_py_object` usage is outside `core_store.rs`, in the perspective binding, where Rust returns typed structs.
+- Verification:
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
+  - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
+  - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v`
