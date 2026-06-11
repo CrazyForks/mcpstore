@@ -110,3 +110,17 @@
   - `check_services_scoped` builds the service-name-to-health dict directly
 - Verification kept to compile check per current direction:
   - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
+
+### Fixed Report Typed Batch
+- Added typed Rust core report structs:
+  - `EventCapabilityReport`
+  - `CacheHealthReport`
+- Existing JSON-returning Rust methods remain as wrappers:
+  - `event_capability_report`
+  - `cache_health_check`
+- PyO3 binding now calls typed siblings:
+  - `event_capability_report_entry`
+  - `cache_health_report`
+- Direct PyO3 converters build the Python dict/list shape without a `serde_json::Value` intermediate for these fixed-shape reports.
+- Verification kept to compile check per current direction:
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
