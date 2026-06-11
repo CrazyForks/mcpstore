@@ -76,3 +76,15 @@
   - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
   - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
   - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v`
+
+### Perspective Converter Cleanup Batch
+- Replaced generic `to_py_object` calls in `perspective.rs` with direct PyO3 dict converters for:
+  - `AgentScopedName`
+  - `ServiceResolution`
+  - `ToolResolution`
+- Removed the now-unused `to_py_object` helper from `py_value.rs`.
+- Removed the unused `py_to_serde_object_or_empty` helper; this also removed the previous Rust dead-code warning.
+- Verification:
+  - `cargo check --manifest-path rust/Cargo.toml -p mcpstore_python`
+  - `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`
+  - `PYTHONPATH=python/src uv run python -m unittest discover -s python/tests -v`
