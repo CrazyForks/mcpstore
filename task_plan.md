@@ -45,6 +45,12 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - `uv run pytest` failed because `pytest` was not installed; used `python -m unittest` for current Python verification.
 - Direct conversion for scoped service/tool lists could not be applied immediately because Rust core returns `serde_json::Value` for those methods, not `ServiceEntry` / `ToolDescription`.
 - `cargo fmt` and `maturin develop` from the repository root failed because the Rust workspace/binding manifests are under `rust/`; use `cargo fmt --manifest-path rust/Cargo.toml --all` and `uv run --with maturin maturin develop --manifest-path rust/bindings/python/Cargo.toml`.
+- Follow-up quick_start verification exposed two Python contract gaps in the PyO3 typed path: service records were missing `client_id`, and successful tool call results were missing `data`. Both fields are public/example-facing and should be emitted at the PyO3/facade boundary rather than faked globally in `RustRecordView`.
+
+## Follow-up Fixes
+- Restored `client_id` on service and scoped tool payloads, derived from the Rust service global name to match current cache relation semantics.
+- Restored successful tool call `data` as `None`, so historical `if tool_result.data:` access remains valid without inventing structured data.
+- Verified the local quick_start example completes end to end against `http://127.0.0.1:21923/mcp`.
 
 ## Status
 **Complete** - Public Python API shape is preserved, the public Python entry is `MCPStore`, and fixed-shape PyO3 reads now use typed/direct conversion paths. Remaining `serde_json::Value` use is limited to dynamic MCP/user payloads where typed conversion would risk dropping fields.
