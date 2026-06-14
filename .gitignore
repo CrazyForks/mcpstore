@@ -35,6 +35,13 @@
 !python/src/**
 !python/tests/
 !python/tests/**
+!python/tools/
+!python/tools/run_example_local_contract.py
+!python/example_local/
+python/example_local/*
+!python/example_local/for_agent/
+!python/example_local/for_agent/isolation/
+!python/example_local/for_agent/isolation/14_multi_agent_isolation.py
 
 
 # ============================================

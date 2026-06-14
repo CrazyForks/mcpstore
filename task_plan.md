@@ -51,6 +51,14 @@ Preserve the documented Python MCPStore API contract while moving the Python run
 - Restored `client_id` on service and scoped tool payloads, derived from the Rust service global name to match current cache relation semantics.
 - Restored successful tool call `data` as `None`, so historical `if tool_result.data:` access remains valid without inventing structured data.
 - Verified the local quick_start example completes end to end against `http://127.0.0.1:21923/mcp`.
+- Added `python/tools/run_example_local_contract.py` to rebuild the PyO3 wheel, sync `_rust.abi3.so` back into `python/src/mcpstore/`, run selected `python/example_local` scripts, and classify failures into API contract gaps vs optional dependency / external service issues.
+- Restored additional Python facade compatibility found by the example runner:
+  - `ServiceProxy.refresh_content()`
+  - `AgentProxy.get_stats()` / `get_stats_async()`
+  - `AgentProxy.map_global()` / `map_local()`
+  - hashable `RustRecordView` snapshots for set/diff style example comparisons
+- Fixed `python/example_local/for_agent/isolation/14_multi_agent_isolation.py` to use the shared `example_utils` import bootstrap that exists in the repo.
+- Adjusted the agent proxy example to skip the LangChain adapter step when the optional LangChain dependency is not installed, instead of failing the whole script.
 
 ## Status
 **Complete** - Public Python API shape is preserved, the public Python entry is `MCPStore`, and fixed-shape PyO3 reads now use typed/direct conversion paths. Remaining `serde_json::Value` use is limited to dynamic MCP/user payloads where typed conversion would risk dropping fields.
