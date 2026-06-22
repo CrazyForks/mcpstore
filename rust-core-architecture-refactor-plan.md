@@ -115,6 +115,15 @@ The following must belong to openkeyv or be direct openkeyv capabilities, not mc
 
 `cache/storage.rs` is allowed to exist, but only as a thin adapter from mcpstore configuration to openkeyv. It should not become a second KV framework. Its responsibility is limited to constructing the correct openkeyv store/wrapper, mapping errors, and hiding openkeyv setup details from the business cache modules.
 
+### Cache 边界硬约束
+
+- mcpstore cache 的公共语义是 MCPStore 业务语义，不是通用数据库或通用 KV SDK。
+- `CacheLayerManager` 可以协调 entity/relation/state/event/projection，但不应该继续承载底层存储策略。
+- `CacheStore` 这类内部 trait 只允许作为 mcpstore 到 openkeyv 的边界缝合层；不能扩展成 memory/redis/disk 等多后端框架。
+- `Memory`、`Redis`、`OpenKeyvMemory`、`OpenKeyvRedis` 如果作为兼容配置保留，内部都必须落到 openkeyv 能力上。
+- mcpstore 不实现通用 TTL、批量写入、集合枚举、key 前缀包装、重试、压缩、加密、路由等基础能力；这些属于 openkeyv。
+- 如果为了 cache 业务需要新增底层能力，先在 `/Users/yuuu/work/2026_4/openkeyv` 设计和验证，再回到 mcpstore 接入。
+
 ## OpenKeyv 协作方案
 
 Local source of truth for development:
@@ -139,6 +148,24 @@ Before changing mcpstore cache storage, verify openkeyv supports the required Ru
 - Error types that can be mapped cleanly into `CacheError`.
 
 If any required capability is missing or awkward, change openkeyv first, test it locally, then wire mcpstore to the improved API. The only acceptable mcpstore-side adapter is a thin boundary adapter; it must not duplicate openkeyv’s backend responsibilities.
+
+Current mcpstore dependency should remain a normal published dependency for regular development:
+
+```toml
+openkeyv = { version = "0.1.4", default-features = false, features = ["redis"] }
+```
+
+Use the local path dependency only while actively debugging or changing openkeyv. Do not commit a permanent absolute path dependency unless the repository intentionally switches to a workspace/local development setup.
+
+## Detailed Refactor Goals
+
+1. Keep `MCPStore` stable as the user-facing Rust facade while moving implementation details into clear domain modules.
+2. Make `core/` boring: compatibility re-exports only, with no growing business implementation.
+3. Make `cache/` readable from the domain outward: entity, relation, state, event, projection, inspect, storage boundary.
+4. Remove vague names when touching the relevant area. Prefer `storage`, `projection`, `lifecycle`, `invocation`, `discovery`, `scope`, and `status` over generic names like `backend`, `manager`, `types`, or `common`.
+5. Keep Rust API compatibility unless a breaking rename is explicitly approved. Internal names can improve faster than public names.
+6. Verify each structural move with `cd rust && cargo check -p mcpstore`; run `cd rust && cargo test` after each meaningful phase.
+7. Keep app/Python changes out of scope unless they are required to preserve existing compile/test contracts.
 
 ## Migration Plan
 
