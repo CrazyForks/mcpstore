@@ -1,5 +1,9 @@
 # Rust Core Architecture Refactor Plan
 
+This document is the single planning record for the Rust core architecture work in
+`rust/crates/mcpstore`. It records the target Scheme A structure and the cache
+refactor contract around openkeyv.
+
 ## 理解复述
 
 当前阶段只聚焦 Rust 源码，主要范围是 `rust/crates/mcpstore`。`rust/apps/*`、Python 包、文档站点暂不作为重构重点，除非为了保持现有 API 合同、编译通过或测试验证必须触碰。
@@ -7,6 +11,8 @@
 这次不是为了“移动文件而移动文件”，而是把 Rust core 拆成用户能直接理解的业务领域。`MCPStore` 仍然是对外主入口，但内部不再把 service、agent、cache、health、control 等能力堆在一个笼统的 `core` 里。`core` 最终只应保留兼容 re-export，真实实现进入清晰的领域目录。
 
 cache 的边界必须收紧：mcpstore 的 cache 只做业务层缓存语义，例如 entity、relation、state、event、projection、inspect。底层 KV store 不属于 mcpstore，唯一真源是 `openkeyv`。本地联调和必要源码修改优先使用 `/Users/yuuu/work/2026_4/openkeyv`。如果 mcpstore 发现 openkeyv 缺少必要能力，优先修 openkeyv，而不是在 mcpstore 里重新造一套长期 KV 抽象。
+
+当前事实：`rust/crates/mcpstore/Cargo.toml` 已依赖 `openkeyv = "0.1.4"`，`cache/storage.rs` 已经通过 `AsyncKeyValue`、`AsyncEnumerateKeys`、`AsyncEnumerateCollections` 做薄适配，`Memory` 和 `Redis` 最终都落到 openkeyv 能力上。后续目标不是“引入 openkeyv”，而是继续收窄 mcpstore 自己的 KV 责任。
 
 ## 方案 A：预期目录结构
 
@@ -42,10 +48,16 @@ rust/crates/mcpstore/src/
     state.rs            # state cache operations and change detection
     event.rs            # event append/list/delete operations
     models.rs           # cache DTOs and snapshots
-    naming.rs           # collection/key naming rules
-    projection.rs       # service/tool/status projection into cache records
+    collections.rs      # collection naming and validation rules
+    naming.rs           # public naming helpers when exposed to callers
+    agent_projection.rs # agent scope projected into cache records
+    service_projection.rs # service/tool/status projected into cache records
+    snapshot.rs         # snapshot/restore/migration between stores
+    runtime.rs          # switch memory/redis storage without leaking KV details
     inspect.rs          # health, snapshot, diagnostics, migration verification
+    codec.rs            # object/value conversion required by openkeyv boundary
     serializer.rs       # JSON/object serialization helpers
+    redis.rs            # lazy Redis constructor only; delegates to openkeyv
     storage.rs          # thin openkeyv binding/config; no custom KV backend
 
   control/
@@ -80,7 +92,7 @@ rust/crates/mcpstore/src/
   core/                 # compatibility re-export layer only
 ```
 
-This is the target shape. Small modules should not be split prematurely, but large mixed-responsibility files should move toward this structure when the change improves readability without changing behavior.
+This is the target shape. Small modules should not be split prematurely, but large mixed-responsibility files should move toward this structure when the change improves readability without changing behavior. `core/` should become a boring compatibility layer; new business code should not be added there.
 
 ## Naming Rules
 
@@ -102,6 +114,8 @@ The final cache layer in mcpstore should express business behavior only:
 - `event`: record cache events needed by mcpstore behavior.
 - `projection`: transform service/runtime state into cache records.
 - `inspect`: expose health, snapshot, diagnostics, and migration checks.
+- `runtime`: switch configured storage while preserving cache snapshot semantics.
+- `storage`: map mcpstore cache needs to openkeyv calls only.
 
 The following must belong to openkeyv or be direct openkeyv capabilities, not mcpstore-owned abstractions:
 
@@ -113,7 +127,7 @@ The following must belong to openkeyv or be direct openkeyv capabilities, not mc
 - TTL semantics and low-level connection handling;
 - JSON/object round-trip details that are generic to a KV store.
 
-`cache/storage.rs` is allowed to exist, but only as a thin adapter from mcpstore configuration to openkeyv. It should not become a second KV framework. Its responsibility is limited to constructing the correct openkeyv store/wrapper, mapping errors, and hiding openkeyv setup details from the business cache modules.
+`cache/storage.rs` is allowed to exist, but only as a thin adapter from mcpstore configuration to openkeyv. It should not become a second KV framework. Its responsibility is limited to constructing the correct openkeyv store/wrapper, mapping errors, and hiding openkeyv setup details from the business cache modules. `cache/redis.rs` is acceptable only as lazy initialization glue for openkeyv Redis, not as a separate Redis backend.
 
 ### Cache 边界硬约束
 
@@ -123,6 +137,7 @@ The following must belong to openkeyv or be direct openkeyv capabilities, not mc
 - `Memory`、`Redis`、`OpenKeyvMemory`、`OpenKeyvRedis` 如果作为兼容配置保留，内部都必须落到 openkeyv 能力上。
 - mcpstore 不实现通用 TTL、批量写入、集合枚举、key 前缀包装、重试、压缩、加密、路由等基础能力；这些属于 openkeyv。
 - 如果为了 cache 业务需要新增底层能力，先在 `/Users/yuuu/work/2026_4/openkeyv` 设计和验证，再回到 mcpstore 接入。
+- 不在 mcpstore 中引入新的 `backend`、`adapter`、`driver` 层级来重新包装 openkeyv；除非它是极薄的边界文件并且没有业务外扩。
 
 ## OpenKeyv 协作方案
 
@@ -149,6 +164,13 @@ Before changing mcpstore cache storage, verify openkeyv supports the required Ru
 
 If any required capability is missing or awkward, change openkeyv first, test it locally, then wire mcpstore to the improved API. The only acceptable mcpstore-side adapter is a thin boundary adapter; it must not duplicate openkeyv’s backend responsibilities.
 
+OpenKeyv areas to inspect or modify first:
+
+- `crates/openkeyv/src/protocol.rs` for trait contracts.
+- `crates/openkeyv/src/store/memory.rs` and `crates/openkeyv/src/store/redis.rs` for store behavior used by mcpstore.
+- `crates/openkeyv/src/wrapper/prefix_collections.rs` and `crates/openkeyv/src/wrapper/single_collection.rs` before adding namespace or collection wrappers in mcpstore.
+- `crates/openkeyv/src/utils/ttl.rs` and wrapper utilities before adding TTL-like behavior in mcpstore.
+
 Current mcpstore dependency should remain a normal published dependency for regular development:
 
 ```toml
@@ -166,6 +188,8 @@ Use the local path dependency only while actively debugging or changing openkeyv
 5. Keep Rust API compatibility unless a breaking rename is explicitly approved. Internal names can improve faster than public names.
 6. Verify each structural move with `cd rust && cargo check -p mcpstore`; run `cd rust && cargo test` after each meaningful phase.
 7. Keep app/Python changes out of scope unless they are required to preserve existing compile/test contracts.
+8. Treat openkeyv as the KV source of truth. If the required primitive is generic KV behavior, it belongs in openkeyv, not mcpstore.
+9. Keep cache tests focused on mcpstore semantics: service projection, agent projection, state changes, event logs, snapshot migration, and diagnostics.
 
 ## Migration Plan
 
@@ -201,6 +225,12 @@ Verification: cache layer tests should cover snapshot/restore, entity operations
 ### Phase 4：Make openkeyv the only KV source
 
 Remove any mcpstore-owned generic KV backend implementation. Keep `CacheStorage::Memory` and `CacheStorage::Redis` only as user-facing configuration variants if needed, but internally they must construct openkeyv-backed stores.
+
+Implementation rule:
+
+- mcpstore may keep a small `CacheStore` trait only if it reduces coupling between business modules and openkeyv signatures.
+- mcpstore must not add concrete `MemoryStore`, `RedisStore`, disk store, TTL store, or collection wrapper implementations.
+- Missing generic KV capability is fixed in `/Users/yuuu/work/2026_4/openkeyv` first, then consumed from mcpstore.
 
 Verification:
 
