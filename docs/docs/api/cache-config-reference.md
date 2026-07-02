@@ -310,7 +310,7 @@ def setup_store(
         debug: Enable debug logging
         cache: Cache configuration object
         static_config: Service config added after setup through Rust facade
-        cache_mode: auto/local/shared
+        cache_mode: auto/local/shared; shared requires Redis-backed cache
         only_db: Use Rust db source mode
     
     Returns:
@@ -330,7 +330,7 @@ def setup_store(
 | `debug` | `bool | str` | `False` | Enable debug logging |
 | `cache` | `Optional[Union[MemoryConfig, RedisConfig]]` | `None` | Cache configuration |
 | `static_config` | `dict | None` | `None` | Service config added through Rust facade after setup |
-| `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `shared` |
+| `cache_mode` | `str` | `"auto"` | One of `auto`, `local`, `shared`; `shared` requires Redis-backed cache |
 | `only_db` | `bool` | `False` | Use Rust db source mode |
 
 **Examples**:
@@ -351,7 +351,7 @@ store = MCPStore.setup_store("mcp.json", cache=redis_config)
 
 # Redis only (no JSON)
 redis_config = RedisConfig(url="redis://localhost:6379/0")
-store = MCPStore.setup_store(cache=redis_config)
+store = MCPStore.setup_store(cache=redis_config, cache_mode="shared")
 
 # With debug mode
 store = MCPStore.setup_store("mcp.json", debug=True)
@@ -360,6 +360,11 @@ store = MCPStore.setup_store("mcp.json", debug=True)
 ---
 
 ## Export Functionality
+
+When `include_sessions=True`, Rust exports serializable MCPStore business
+sessions: session entities, service bindings, tool visibility, session status,
+session state, and session events. Transport-local MCP connection sessions are
+not part of this snapshot.
 
 ### exportjson()
 
@@ -377,13 +382,12 @@ async def exportjson(
     
     Args:
         filepath: Output file path (optional)
-        include_sessions: Must be False; Rust core does not expose serializable session state.
+        include_sessions: Include Rust-backed business session snapshot.
     
     Returns:
         Dictionary with exported data in mcpServers format
     
     Raises:
-        NotImplementedError: If include_sessions=True
         IOError: If file write fails
         PermissionError: If insufficient permissions
     """
@@ -394,7 +398,7 @@ async def exportjson(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `filepath` | `Optional[str]` | `None` | Output file path (if None, only returns data) |
-| `include_sessions` | `bool` | `False` | Must remain `False`; sessions are Python routing state, not Rust-serializable data |
+| `include_sessions` | `bool` | `False` | Include serializable Rust business session snapshot |
 
 **Returns**:
 
@@ -421,9 +425,17 @@ data = await store.exportjson("backup.json")
 # Get data without saving
 data = await store.exportjson()
 
+# Include Rust business sessions in the export
+data = await store.exportjson(include_sessions=True)
+
 # Use exported data
 print(f"Exported {len(data['mcpServers'])} services")
 ```
+
+Use `RedisConfig(..., namespace="...")` with `cache_mode="shared"` when multiple
+Python processes, Rust agents, API servers, or MCP servers must see the same
+live session state. Memory-backed stores are process-local and are rejected for
+`cache_mode="shared"` by the Python facade.
 
 ---
 

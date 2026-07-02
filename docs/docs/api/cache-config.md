@@ -231,7 +231,7 @@ store = MCPStore.setup_store(
 )
 ```
 
-`cache_mode="auto"` 使用 Rust 默认本地 source mode；不会再执行旧 Python cache wrapper 的自动模式推断。需要只使用共享 Rust DB source mode 时，显式传 `cache_mode="shared"` 或 `only_db=True`。
+`cache_mode="auto"` 使用 Rust 默认本地 source mode；不会再执行旧 Python cache wrapper 的自动模式推断。需要只使用共享 Rust DB source mode 时，显式传 `cache_mode="shared"` 或 `only_db=True`。`cache_mode="shared"` 必须搭配 Redis-backed cache；Memory 后端是进程内存，不能跨进程共享 session。
 
 ### 显式指定模式
 
@@ -272,7 +272,7 @@ await store.export_to_json("./exported_config.json")
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `output_path` | `str` | 必填 | 输出文件路径 |
-| `include_sessions` | `bool` | `False` | 必须为 `False`；Rust core 当前不暴露可序列化 session state |
+| `include_sessions` | `bool` | `False` | 导出 Rust business session 快照：session 实体、服务绑定、工具可见性、状态、session_state 和事件 |
 
 ### 从 JSON 导入配置
 
@@ -280,6 +280,8 @@ await store.export_to_json("./exported_config.json")
 # 从 JSON 导入配置到缓存
 await store.import_from_json("./config.json")
 ```
+
+导入包含 `sessions` 字段的 JSON 时，Rust core 会恢复 business session 快照。若目标缓存中已有同 key 但内容不同的 session，导入会报冲突，不会静默覆盖。
 
 ---
 
@@ -319,17 +321,11 @@ memory_config = MemoryConfig()
 await store.registry.switch_backend(memory_config)
 ```
 
-### 热插拔限制
+### 热插拔语义
 
-**✅ 可热插拔的数据**：
-- 工具缓存
-- 服务状态
-- 服务元数据
-- 客户端映射
-- 工具映射
+Rust core 会以缓存快照迁移 entity、relation、state 和 event 层，因此服务、工具、OpenAPI 分析结果、业务 session、session_state、session 事件都会随 `switch_cache` / `switch_backend` 迁移到目标后端。
 
-**❌ 不可热插拔的数据**：
-- Session 数据（始终在内存，不可序列化）
+实时跨进程共享要求所有进程使用同一个 Redis URL 和同一个 `namespace`。切到 Memory 只适合单进程运行；Python facade 会拒绝 `cache_mode="shared"` + Memory，避免误以为已经跨进程共享。
 
 ---
 
